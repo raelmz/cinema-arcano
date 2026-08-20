@@ -4,7 +4,7 @@
 
 **Última atualização**: 20/08/2026
 **Autor**: Israel Menezes de Andrade
-**Status**: Infraestrutura inicial pronta (monorepo, banco local via Docker, schema migrado) — código de aplicação ainda não iniciado
+**Status**: Módulo Auth completo (register, login, `/auth/me`, guards JWT/RBAC, seed) implementado e testado ponta a ponta, prestes a receber o commit único do módulo — demais módulos de aplicação (catálogo, reserva, pagamento, ticket, portaria) ainda não iniciados
 
 ---
 
@@ -245,10 +245,74 @@ Modelagem inicial com 10 tabelas, cobrindo os três papéis (organizador, client
 
 Sobre a expiração: optei por atrelar o `exp` ao horário da sessão (em vez de não usar expiração e depender só do campo de status no banco) porque isso resolve "evento errado/expirado" com uma verificação nativa do próprio JWT — funciona como camada extra de defesa mesmo que a checagem contra o banco falhe ou esteja indisponível no momento da validação na portaria.
 
-### 4.11 Pendente de decisão
-- Provedor de hospedagem gerenciada para backend + PostgreSQL (Railway, Render, Fly.io, Neon, etc.)
+### 4.11 Hospedagem gerenciada — Render (backend + PostgreSQL)
+
+**Decisão**: backend (NestJS) e PostgreSQL gerenciado hospedados no Render, free tier.
+
+**Porquê**:
+- Este projeto vai para o meu portfólio, não é descartável após a avaliação — então priorizei durabilidade sobre performance de free tier: o Render tem um limite de free tier melhor para manter o projeto no ar por tempo indeterminado, comparado às alternativas consideradas (Railway, Fly.io, Neon).
+- Trade-off consciente e documentado: **cold start**. No free tier, o serviço web "dorme" após um período de inatividade e a primeira requisição depois disso demora mais para responder (o servidor precisa "acordar"). Decidi aceitar esse trade-off porque:
+  - O impacto é só na primeira requisição após inatividade, não no uso contínuo.
+  - Para um projeto de portfólio (visitado esporadicamente, não em produção real com tráfego constante), durabilidade do free tier pesa mais do que latência de cold start.
+  - Não justifica o custo de um plano pago para um desafio técnico.
+
+**Pendente**: se o cold start atrapalhar a demonstração para o avaliador, considerar algum mecanismo simples de keep-alive (ex: ping periódico) — decisão a avaliar mais perto da entrega, sem prioridade agora.
+
+### 4.12 Pendente de decisão
 - Identidade visual concreta do Cinema Arcano: paleta, tipografia, nome das telas/estados (a detalhar)
-- Plano dia-a-dia para os dias restantes do prazo (a detalhar)
+
+### 4.13 Fluxo de desenvolvimento e plano dia-a-dia
+
+**Decisão**: desenvolvimento intercalado por módulo — backend do módulo, depois frontend consumindo esse módulo, depois o próximo módulo — em vez de fechar o backend inteiro antes de tocar no frontend.
+
+**Porquê**: reduz o risco de estourar o prazo sem nada entregável ponta a ponta; sempre há um pedaço do fluxo funcionando de verdade; problemas de contrato de API entre front e back aparecem cedo, não só no fim.
+
+**Plano dia-a-dia** (5 dias restantes até 25/08 13:03):
+
+| Dia | Data | Backend | Frontend |
+|---|---|---|---|
+| 1 | 20/08 | Auth (User, JWT, Argon2id, RBAC) | — |
+| 2 | 21/08 | Catálogo (integração TMDb) | Login/cadastro (consome Auth) |
+| 3 | 22/08 | Salas/Assentos/Sessões + início de Reserva | Vitrine de filmes/sessões (consome Catálogo) |
+| 4 | 23/08 | Pagamento simulado + Ticket (QR/JWT) | Mapa de assentos interativo + tela do ingresso com QR |
+| 5 | 24/08 | Portaria (validação de QR) + deploy completo | Tela de portaria (câmera + digitação manual) |
+| — | 25/08 até 13:03 | Margem de folga: ajustes finais, revisão de docs, entrega | |
+
+### 4.14 Registro de usuários por papel
+
+**Decisão**: `POST /auth/register` sempre cria o usuário com `role: CUSTOMER`, ignorando qualquer valor de `role` enviado no corpo da requisição. Os papéis `ADMIN` (organizador) e `GATE` (portaria) só existem através do seed do banco (`prisma/seed.ts`) — não há rota pública para criá-los.
+
+**Porquê**: impede escalada de privilégio via cadastro público — sem essa trava, qualquer pessoa poderia se autopromover a organizador ou portaria só enviando `"role": "ADMIN"` no corpo do `register`. Isso também é coerente com o mundo real: ninguém se autocadastra como dono do cinema ou funcionário da portaria, esses papéis são atribuídos internamente.
+
+### 4.15 Granularidade de commit do módulo Auth
+
+**Decisão**: o módulo de autenticação (register, login, `/auth/me`, `JwtAuthGuard`, `RolesGuard`, seed) foi implementado e testado por completo antes de um único commit — em vez de dividir em múltiplos commits menores ao longo do desenvolvimento do módulo.
+
+**Porquê**: mantém a ideia de "commit = unidade funcional coerente". Um commit no meio do módulo (ex: só o register, sem login nem guards) representaria um estado do sistema que não é testável ponta a ponta por si só. O requisito de "commits descritivos ao longo da semana" (seção 5) é atendido no nível de módulo — cada módulo funcional vira um commit — e não no nível de cada arquivo criado.
+
+### 4.16 PrismaModule como `@Global()`
+
+**Decisão**: o módulo do Prisma (`PrismaModule`) é marcado com `@Global()` no NestJS e importado uma única vez no `AppModule`, em vez de ser importado individualmente em cada módulo que precisa dele.
+
+**Porquê**: praticamente todo módulo futuro do projeto (Auth, Catálogo, Sessão, Reserva, Ticket, Portaria) depende do banco de dados. Reimportar `PrismaModule` em cada um desses módulos seria repetição sem ganho real. Essa é uma exceção consciente à prática padrão do NestJS de módulos explícitos (evitar globals) — aceita aqui porque o `PrismaService` é infraestrutura transversal, não uma dependência de domínio específica de um módulo.
+
+### 4.17 Guard de autenticação própria, sem Passport
+
+**Decisão**: `JwtAuthGuard` implementada manualmente usando `JwtService.verifyAsync` (do `@nestjs/jwt`) diretamente dentro da guard, sem usar as bibliotecas `passport`/`passport-jwt`. A extração do token do header `Authorization: Bearer <token>` também é feita manualmente dentro da própria guard, sem uma `strategy` separada.
+
+**Porquê**: Passport adicionaria uma biblioteca inteira (com seu próprio modelo de `strategy`/`serialize`/`deserialize`) só para resolver algo que o `@nestjs/jwt` sozinho já cobre — verificar um token e popular `request['user']`. Menos superfície de código novo para debugar dado o prazo de 7 dias. A guard ficou autocontida: quem lê `jwt-auth.guard.ts` entende o fluxo inteiro sem precisar rastrear configuração de uma strategy em outro arquivo.
+
+### 4.18 Autorização por papel — RolesGuard + decorator, testada com usuários reais
+
+**Decisão**: autorização por papel implementada com `RolesGuard` + decorator `@Roles(...)`, lido via `Reflector`, sempre usada em conjunto com `JwtAuthGuard` (`@UseGuards(JwtAuthGuard, RolesGuard)` — nessa ordem, porque `RolesGuard` só lê `request['user']`, que é populado pela `JwtAuthGuard`; ela não valida token sozinha).
+
+**Validação**: testada com os 4 usuários reais criados pelo seed (não com rota descartável). Aplicando temporariamente `@Roles('ADMIN')` em `GET /auth/me`: login como ADMIN retornou 200 com o payload esperado; login como CUSTOMER e como GATE retornaram 403 Forbidden, como esperado. Guard validada ponta a ponta e revertida em seguida (ver decisão 4.19).
+
+### 4.19 `GET /auth/me` sem restrição de papel
+
+**Decisão**: `GET /auth/me` usa apenas `JwtAuthGuard` (exige estar logado), sem `RolesGuard`/`@Roles`. Qualquer papel autenticado (ADMIN, CUSTOMER ou GATE) pode acessar essa rota.
+
+**Porquê**: o dado retornado por `/auth/me` já vem do próprio token decodificado (`req['user']`) — ou seja, cada usuário só enxerga os próprios dados, nunca os de outra pessoa. Restringir essa rota por papel não adiciona segurança nenhuma (não há vazamento de dado de terceiros possível) e quebraria a experiência normal: um CUSTOMER logado precisa conseguir ver o próprio perfil. `RolesGuard` fica reservada para rotas que de fato mexem em recursos de outra pessoa ou do sistema como um todo — por exemplo, futuramente, `POST /sessions` (publicar sessão de filme, ação do organizador) ou uma eventual rota de listagem de todos os usuários.
 
 ---
 
@@ -265,14 +329,16 @@ Sobre a expiração: optei por atrelar o `exp` ao horário da sessão (em vez de
 
 ## 6. Perguntas em aberto / a resolver nas próximas sessões
 
-- [ ] Escolher provedor de hospedagem para backend + Postgres gerenciado
 - [ ] Definir identidade visual do Cinema Arcano (paleta, tipografia, tom de voz das telas)
-- [ ] Montar plano dia-a-dia para os dias restantes do prazo (faltam ~5 dias até 25/08/2026, 13:03)
 - [x] ~~Definir estrutura de pastas do monorepo (front + back)~~ — feito, ver seção 4.1 e estrutura no repositório (`frontend/`, `backend/`)
 - [x] ~~Desenhar schema do banco~~ — feito, ver seção 4.7 (conferido visualmente no Prisma Studio)
 - [x] ~~Definir estratégia técnica do QR não forjável~~ — feito, ver seção 4.9
 - [x] ~~Definir estratégia de concorrência no assento~~ — feito, ver seção 4.8
 - [x] ~~Definir payload exato do JWT do ticket~~ — feito, ver seção 4.10
+- [x] ~~Escolher provedor de hospedagem para backend + Postgres gerenciado~~ — feito, ver seção 4.11 (Render, com trade-off de cold start documentado)
+- [x] ~~Montar plano dia-a-dia para os dias restantes do prazo~~ — feito, ver seção 4.13
+- [x] ~~Implementar módulo Auth completo (register, login, guards JWT/RBAC, seed)~~ — feito, ver seções 4.14 a 4.19
+- [x] ~~Validar `RolesGuard` com usuários reais~~ — feito, ver seção 4.18 (ADMIN 200, CUSTOMER/GATE 403)
 
 ---
 
@@ -284,3 +350,5 @@ Sobre a expiração: optei por atrelar o `exp` ao horário da sessão (em vez de
 | 19/08/2026 | Confirmado prazo real (e-mail recebido 18/08 13:03 → entrega até 25/08 13:03). Definida identidade do produto: Cinema Arcano. Stack final fechada: Next.js + NestJS + Prisma + PostgreSQL + JWT/Argon2id/RBAC próprios (substitui a hipótese anterior de Supabase como banco por trás de uma API própria). Documento reescrito em primeira pessoa. |
 | 20/08/2026 | Estrutura do monorepo criada (`frontend/` Next.js, `backend/` NestJS). Banco local via Docker Compose (Postgres 16) documentado. Downgrade de Prisma 7 para 6.x, com justificativa. Schema do banco (10 tabelas) documentado. Decisões de QR (JWT assinado HS256) e concorrência de assento (constraint `UNIQUE`) transcritas com justificativa. Primeira migration (`init`) aplicada com sucesso ao banco. |
 | 20/08/2026 | Tabelas conferidas visualmente no Prisma Studio (10 modelos, vazios, estrutura correta). Payload do JWT do ticket definido e documentado (campos + estratégia de expiração atrelada ao horário da sessão). |
+| 20/08/2026 | Provedor de hospedagem gerenciada definido: Render, free tier, para backend + PostgreSQL. Trade-off de cold start documentado e aceito, priorizando durabilidade do projeto para portfólio. Fluxo de desenvolvimento definido como intercalado (backend → frontend por módulo). Plano dia-a-dia fechado para os 5 dias restantes do prazo. |
+| 20/08/2026 | Módulo Auth implementado e testado por completo: `AuthService`/`AuthController` (register + login), `PrismaService`/`PrismaModule` (global), `JwtAuthGuard` e `RolesGuard` (sem Passport), `GET /auth/me`, e `prisma/seed.ts` (1 ADMIN, 2 CUSTOMERs, 1 GATE, senhas Argon2id). Decisões documentadas: registro sempre como CUSTOMER via API (4.14), commit único por módulo funcional (4.15), PrismaModule global (4.16), guard própria sem Passport (4.17). `RolesGuard` validada com os 4 usuários reais do seed (4.18). `/auth/me` liberado para qualquer papel autenticado, sem restrição por role (4.19). |

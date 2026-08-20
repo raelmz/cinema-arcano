@@ -1,0 +1,175 @@
+// schema.prisma
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  ADMIN     // organizador
+  CUSTOMER
+  GATE      // portaria
+}
+
+enum SessionStatus {
+  SCHEDULED
+  CANCELLED
+  FINISHED
+}
+
+enum ReservationStatus {
+  PENDING
+  CONFIRMED
+  CANCELLED
+  EXPIRED
+}
+
+enum TicketStatus {
+  VALID
+  USED
+  CANCELLED
+}
+
+enum ValidationResult {
+  VALID
+  INVALID
+  ALREADY_USED
+  WRONG_EVENT
+}
+
+enum PaymentStatus {
+  PENDING
+  APPROVED
+  FAILED
+}
+
+model User {
+  id           String   @id @default(uuid())
+  name         String
+  email        String   @unique
+  passwordHash String
+  role         Role     @default(CUSTOMER)
+  createdAt    DateTime @default(now())
+
+  sessionsOrganized Session[]      @relation("OrganizerSessions")
+  reservations      Reservation[]
+  gateValidations   ValidationLog[] @relation("GateValidations")
+}
+
+model Movie {
+  id              String   @id @default(uuid())
+  tmdbId          Int      @unique
+  title           String
+  posterPath      String?
+  overview        String?
+  durationMinutes Int?
+  releaseDate     DateTime?
+  createdAt       DateTime @default(now())
+
+  sessions Session[]
+}
+
+model Room {
+  id            String @id @default(uuid())
+  name          String
+  rows          Int
+  seatsPerRow   Int
+
+  seats    Seat[]
+  sessions Session[]
+}
+
+model Seat {
+  id     String @id @default(uuid())
+  roomId String
+  room   Room   @relation(fields: [roomId], references: [id])
+  row    Int
+  number Int
+
+  reservationSeats ReservationSeat[]
+
+  @@unique([roomId, row, number])
+}
+
+model Session {
+  id          String        @id @default(uuid())
+  movieId     String
+  movie       Movie         @relation(fields: [movieId], references: [id])
+  roomId      String
+  room        Room          @relation(fields: [roomId], references: [id])
+  organizerId String
+  organizer   User          @relation("OrganizerSessions", fields: [organizerId], references: [id])
+  startTime   DateTime
+  price       Decimal       @db.Decimal(10, 2)
+  status      SessionStatus @default(SCHEDULED)
+  createdAt   DateTime      @default(now())
+
+  reservations     Reservation[]
+  reservationSeats ReservationSeat[]
+}
+
+model Reservation {
+  id        String             @id @default(uuid())
+  sessionId String
+  session   Session            @relation(fields: [sessionId], references: [id])
+  userId    String
+  user      User               @relation(fields: [userId], references: [id])
+  status    ReservationStatus  @default(PENDING)
+  createdAt DateTime           @default(now())
+
+  seats   ReservationSeat[]
+  ticket  Ticket?
+  payment Payment?
+}
+
+// Peça crítica de concorrência: a constraint unique(sessionId, seatId)
+// é quem garante, no nível do banco, que um assento não seja vendido duas vezes
+// na mesma sessão — não depende de lock manual na aplicação.
+model ReservationSeat {
+  id            String      @id @default(uuid())
+  reservationId String
+  reservation   Reservation @relation(fields: [reservationId], references: [id])
+  sessionId     String
+  session       Session     @relation(fields: [sessionId], references: [id])
+  seatId        String
+  seat          Seat        @relation(fields: [seatId], references: [id])
+
+  @@unique([sessionId, seatId])
+}
+
+model Ticket {
+  id            String       @id @default(uuid())
+  reservationId String       @unique
+  reservation   Reservation  @relation(fields: [reservationId], references: [id])
+  qrToken       String       @unique
+  status        TicketStatus @default(VALID)
+  usedAt        DateTime?
+  createdAt     DateTime     @default(now())
+
+  validations ValidationLog[]
+}
+
+model ValidationLog {
+  id            String           @id @default(uuid())
+  ticketId      String
+  ticket        Ticket           @relation(fields: [ticketId], references: [id])
+  result        ValidationResult
+  attemptedAt   DateTime         @default(now())
+  gateUserId    String
+  gateUser      User             @relation("GateValidations", fields: [gateUserId], references: [id])
+}
+
+model Payment {
+  id            String        @id @default(uuid())
+  reservationId String        @unique
+  reservation   Reservation   @relation(fields: [reservationId], references: [id])
+  status        PaymentStatus @default(PENDING)
+  amount        Decimal       @db.Decimal(10, 2)
+  method        String        @default("SIMULATED")
+  paidAt        DateTime?
+  createdAt     DateTime      @default(now())
+}

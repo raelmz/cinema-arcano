@@ -1,20 +1,61 @@
-# 🎬 Cinema Arcano
+<div align="center">
 
-> Plataforma de eventos e ingressos com identidade própria — desenvolvida como projeto técnico para o processo seletivo Elite Dev (Verzel).
+<img src="https://capsule-render.vercel.app/api?type=waving&color=0:0F6E56,100:173404&height=140&text=Cinema%20Arcano&fontSize=42&fontColor=F1F5F9&animation=fadeIn" width="100%" />
 
-**Status**: 🚧 Em desenvolvimento — projeto iniciado em 19/08/2026, prazo de entrega em 25/08/2026. Monorepo estruturado, banco local (PostgreSQL via Docker) rodando e schema já migrado. Código de aplicação (rotas, autenticação, telas) ainda não iniciado.
+### Plataforma de eventos e ingressos com identidade própria
+
+[![Status](https://img.shields.io/badge/Status-Em_desenvolvimento-0F6E56?style=flat-square)](#status)
+[![Prazo](https://img.shields.io/badge/Entrega-25%2F08%2F2026-173404?style=flat-square)](#status)
+[![Processo](https://img.shields.io/badge/Elite_Dev-Verzel-444441?style=flat-square)](#sobre)
+
+</div>
+
+<img src="https://capsule-render.vercel.app/api?type=rect&color=0F6E56&height=3&section=header" width="100%" />
 
 ## Sobre
 
-O Cinema Arcano é uma sala de cinema fictícia com identidade própria: cada ingresso comprado é tratado como um pequeno ritual de entrada no mundo do filme. O sistema permite que um organizador publique sessões a partir do catálogo do TMDb, que clientes reservem assentos, paguem (de forma simulada) e recebam ingressos com QR code, e que a portaria valide esses ingressos na entrada.
+Projeto técnico desenvolvido para a etapa 3/6 do processo seletivo **Elite Dev** (Verzel — Desenvolvedor Full Stack Jr).
 
-Documentação completa do processo de decisão — requisitos, arquitetura, trade-offs considerados — está em [`docs/PROJETO.md`](./docs/PROJETO.md).
+O **Cinema Arcano** é uma sala de cinema fictícia com identidade própria: cada ingresso comprado é tratado como um pequeno ritual de entrada no mundo do filme, não como um checkout qualquer. O sistema permite que um organizador publique sessões a partir do catálogo do TMDb, que clientes reservem assentos num mapa, paguem (de forma simulada) e recebam ingressos com QR code, e que a portaria valide esses ingressos na entrada — com retorno claro de válido, inválido, já utilizado ou evento errado.
+
+Documentação completa do processo de decisão — requisitos, arquitetura, trade-offs considerados e justificados um a um — está em [`docs/PROJETO.md`](./docs/PROJETO.md).
+
+<a id="status"></a>
+## Status
+
+🚧 **Em desenvolvimento** — projeto iniciado em 19/08/2026, entrega em 25/08/2026.
+
+- ✅ Monorepo estruturado (`frontend/` + `backend/`)
+- ✅ Banco local (PostgreSQL 16 via Docker Compose) rodando, schema migrado (10 tabelas)
+- ✅ **Módulo de Autenticação completo**: registro, login, `/auth/me`, guards JWT + RBAC (`JwtAuthGuard`, `RolesGuard`), seed de usuários (1 organizador, 2 clientes, 1 portaria)
+- 🔜 Catálogo de filmes (integração TMDb)
+- 🔜 Salas, assentos e sessões
+- 🔜 Reserva com mapa de assentos + pagamento simulado
+- 🔜 Ingresso com QR code assinado (JWT)
+- 🔜 Validação de ingresso na portaria
+- 🔜 Deploy (Vercel + Render)
+
+Plano dia-a-dia detalhado em [`docs/PROJETO.md`](./docs/PROJETO.md#413-fluxo-de-desenvolvimento-e-plano-dia-a-dia).
+
+<img src="https://capsule-render.vercel.app/api?type=rect&color=0F6E56&height=3&section=header" width="100%" />
 
 ## Stack
 
-Next.js · NestJS · Prisma · PostgreSQL · TypeScript
+<div align="center">
 
-Detalhes da arquitetura e justificativas de cada escolha em [`docs/PROJETO.md`](./docs/PROJETO.md#4-decisões-técnicas-tomadas-até-agora).
+![Next.js](https://img.shields.io/badge/Next.js-0F6E56?style=flat-square&logo=next.js&logoColor=F1F5F9)
+![TypeScript](https://img.shields.io/badge/TypeScript-0F6E56?style=flat-square&logo=typescript&logoColor=F1F5F9)
+![NestJS](https://img.shields.io/badge/NestJS-173404?style=flat-square&logo=nestjs&logoColor=F1F5F9)
+![Prisma](https://img.shields.io/badge/Prisma-173404?style=flat-square&logo=prisma&logoColor=F1F5F9)
+![PostgreSQL](https://img.shields.io/badge/PostgreSQL-444441?style=flat-square&logo=postgresql&logoColor=F1F5F9)
+![Docker](https://img.shields.io/badge/Docker-444441?style=flat-square&logo=docker&logoColor=F1F5F9)
+![JWT](https://img.shields.io/badge/JWT-1A1A18?style=flat-square&logo=jsonwebtokens&logoColor=F1F5F9)
+
+</div>
+
+Autenticação e autorização (JWT + Argon2id + RBAC) implementadas na própria API, sem BaaS de terceiro — decisão proposital, ver [`docs/PROJETO.md`](./docs/PROJETO.md#44-arquitetura-de-backend--api-própria-sem-baas). Detalhes de arquitetura e justificativa de cada escolha em [`docs/PROJETO.md`, seção 4](./docs/PROJETO.md#4-decisões-técnicas-tomadas-até-agora).
+
+<img src="https://capsule-render.vercel.app/api?type=rect&color=0F6E56&height=3&section=header" width="100%" />
 
 ## Estrutura do repositório
 
@@ -25,19 +66,27 @@ cinema-arcano/
 └── frontend/          → Next.js + TypeScript
 ```
 
+<img src="https://capsule-render.vercel.app/api?type=rect&color=0F6E56&height=3&section=header" width="100%" />
+
 ## Como rodar
 
-Instruções completas (setup de front, back e variáveis de ambiente) estão nos READMEs de cada pacote: [`backend/README.md`](./backend/README.md) e [`frontend/README.md`](./frontend/README.md).
+Instruções completas de setup (front, back e variáveis de ambiente) estão nos READMEs de cada pacote: [`backend/README.md`](./backend/README.md) e [`frontend/README.md`](./frontend/README.md).
 
-Resumo do backend (banco de dados):
+Resumo do backend:
+
 ```bash
 cd backend
 docker compose up -d        # sobe PostgreSQL 16 local
-npx prisma migrate dev       # aplica o schema ao banco
+npx prisma migrate dev      # aplica o schema ao banco
+npx prisma db seed          # cria usuários iniciais (1 organizador, 2 clientes, 1 portaria)
 ```
 
-_Instruções de setup completas de ponta a ponta (incluindo variáveis de ambiente e seed de dados) serão consolidadas aqui conforme o projeto avança._
+_Instruções de setup completas de ponta a ponta serão consolidadas aqui conforme o projeto avança._
+
+<img src="https://capsule-render.vercel.app/api?type=rect&color=0F6E56&height=3&section=header" width="100%" />
 
 ## Uso de IA neste projeto
 
-Este projeto foi planejado com apoio de IA para organização de ideias, revisão de trade-offs e documentação (ver [`docs/PROJETO.md`](./docs/PROJETO.md)). Detalhamento completo de onde e como IA foi usada — e o que foi feito sem ela — será adicionado ao final do desenvolvimento.
+Este projeto foi desenvolvido com apoio de IA para organização de ideias, revisão de trade-offs, geração de código de apoio e documentação. Todas as decisões de produto e arquitetura são registradas com justificativa própria em [`docs/PROJETO.md`](./docs/PROJETO.md) — não apenas o resultado final, mas o porquê de cada escolha. Detalhamento completo de onde e como a IA foi usada — e o que foi feito sem ela — será adicionado ao final do desenvolvimento.
+
+<img src="https://capsule-render.vercel.app/api?type=rect&color=0:0F6E56,100:173404&height=100&section=footer" width="100%" />

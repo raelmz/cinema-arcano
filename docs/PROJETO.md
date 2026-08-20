@@ -229,9 +229,24 @@ Modelagem inicial com 10 tabelas, cobrindo os três papéis (organizador, client
 
 **Pendente de detalhar**: o payload exato do JWT do ticket (quais campos entram — ex: `ticketId`, `sessionId`, `seatId` — e o tempo de expiração escolhido). Ver seção 6.
 
-### 4.10 Pendente de decisão
+### 4.10 Payload do JWT do ticket
+
+**Decisão**: o QR code do ingresso carrega um JWT (HS256, ver decisão 4.9) com o seguinte payload:
+
+| Campo | Função |
+|---|---|
+| `ticketId` | Identifica o ingresso no banco — usado pela portaria para buscar o registro e checar status ("já utilizado") |
+| `sessionId` | Permite a portaria detectar "evento errado" sem precisar de outra consulta |
+| `seatId` | Exibido na tela da portaria no momento da validação (não obrigatório para a validação em si) |
+| `iat` | Data de emissão (padrão JWT, útil para auditoria) |
+| `exp` | Expiração = horário da sessão + duração do filme + margem de tolerância |
+
+**Porquê**: nenhum dado pessoal do cliente (nome, e-mail) ou valor pago entra no token — o JWT do ticket prova posse de um ingresso válido, não autentica um usuário. Essas informações continuam só no banco, associadas ao `ticketId`.
+
+Sobre a expiração: optei por atrelar o `exp` ao horário da sessão (em vez de não usar expiração e depender só do campo de status no banco) porque isso resolve "evento errado/expirado" com uma verificação nativa do próprio JWT — funciona como camada extra de defesa mesmo que a checagem contra o banco falhe ou esteja indisponível no momento da validação na portaria.
+
+### 4.11 Pendente de decisão
 - Provedor de hospedagem gerenciada para backend + PostgreSQL (Railway, Render, Fly.io, Neon, etc.)
-- Payload exato do JWT do ticket e seu tempo de expiração
 - Identidade visual concreta do Cinema Arcano: paleta, tipografia, nome das telas/estados (a detalhar)
 - Plano dia-a-dia para os dias restantes do prazo (a detalhar)
 
@@ -251,13 +266,13 @@ Modelagem inicial com 10 tabelas, cobrindo os três papéis (organizador, client
 ## 6. Perguntas em aberto / a resolver nas próximas sessões
 
 - [ ] Escolher provedor de hospedagem para backend + Postgres gerenciado
-- [ ] Definir payload exato do JWT do ticket (campos e tempo de expiração)
 - [ ] Definir identidade visual do Cinema Arcano (paleta, tipografia, tom de voz das telas)
 - [ ] Montar plano dia-a-dia para os dias restantes do prazo (faltam ~5 dias até 25/08/2026, 13:03)
 - [x] ~~Definir estrutura de pastas do monorepo (front + back)~~ — feito, ver seção 4.1 e estrutura no repositório (`frontend/`, `backend/`)
-- [x] ~~Desenhar schema do banco~~ — feito, ver seção 4.7
+- [x] ~~Desenhar schema do banco~~ — feito, ver seção 4.7 (conferido visualmente no Prisma Studio)
 - [x] ~~Definir estratégia técnica do QR não forjável~~ — feito, ver seção 4.9
 - [x] ~~Definir estratégia de concorrência no assento~~ — feito, ver seção 4.8
+- [x] ~~Definir payload exato do JWT do ticket~~ — feito, ver seção 4.10
 
 ---
 
@@ -268,3 +283,4 @@ Modelagem inicial com 10 tabelas, cobrindo os três papéis (organizador, client
 | 19/08/2026 | Criação do documento. Decisões iniciais: TMDb, mapa de assentos. |
 | 19/08/2026 | Confirmado prazo real (e-mail recebido 18/08 13:03 → entrega até 25/08 13:03). Definida identidade do produto: Cinema Arcano. Stack final fechada: Next.js + NestJS + Prisma + PostgreSQL + JWT/Argon2id/RBAC próprios (substitui a hipótese anterior de Supabase como banco por trás de uma API própria). Documento reescrito em primeira pessoa. |
 | 20/08/2026 | Estrutura do monorepo criada (`frontend/` Next.js, `backend/` NestJS). Banco local via Docker Compose (Postgres 16) documentado. Downgrade de Prisma 7 para 6.x, com justificativa. Schema do banco (10 tabelas) documentado. Decisões de QR (JWT assinado HS256) e concorrência de assento (constraint `UNIQUE`) transcritas com justificativa. Primeira migration (`init`) aplicada com sucesso ao banco. |
+| 20/08/2026 | Tabelas conferidas visualmente no Prisma Studio (10 modelos, vazios, estrutura correta). Payload do JWT do ticket definido e documentado (campos + estratégia de expiração atrelada ao horário da sessão). |

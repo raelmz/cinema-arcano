@@ -2,9 +2,9 @@
 
 > Este é o meu diário de decisões para o desafio técnico da Verzel (Elite Dev). Uso IA como apoio para organizar ideias, revisar trade-offs e manter esse registro atualizado a cada sessão — mas as decisões de produto e arquitetura são minhas. Mantenho isso versionado no repositório porque o próprio desafio pede transparência sobre processo, e porque documentar o "porquê" evita que decisões corretas pareçam arbitrárias numa leitura rápida do código.
 
-**Última atualização**: 19/08/2026
+**Última atualização**: 20/08/2026
 **Autor**: Israel Menezes de Andrade
-**Status**: Fase de planejamento — nenhuma linha de código escrita ainda
+**Status**: Infraestrutura inicial pronta (monorepo, banco local via Docker, schema migrado) — código de aplicação ainda não iniciado
 
 ---
 
@@ -163,13 +163,77 @@ Consolidado dentro da stack final (seção 4.1): NestJS concentra toda a lógica
 
 **Vercel para deploy do front**: decisão de baixo risco — é a opção literalmente sugerida no PDF ("Vercel ou plataforma similar"), vale +1 ponto no critério oficial.
 
-### 4.5 Pendente de decisão
+### 4.5 Ambiente de banco local — Docker Compose
+
+**Decisão**: PostgreSQL 16 rodando em container local via `docker-compose.yml` dentro de `backend/`, em vez de instalado direto no sistema operacional.
+
+**Porquê**: ambiente descartável e reproduzível — qualquer pessoa que for rodar o projeto (incluindo o avaliador) sobe o banco com um único comando, sem precisar instalar Postgres manualmente na máquina. Reduz também o risco de conflito de versão entre o Postgres do meu ambiente de desenvolvimento e o que será usado em produção.
+
+```yaml
+services:
+  postgres:
+    image: postgres:16
+    container_name: cinema-arcano-db
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: cinema_arcano
+    ports:
+      - "5432:5432"
+    volumes:
+      - cinema_arcano_pgdata:/var/lib/postgresql/data
+volumes:
+  cinema_arcano_pgdata:
+```
+
+Testado localmente (Windows 11 + WSL2 + Docker Desktop): banco sobe com `docker compose up -d`, confirmado `Up` via `docker ps`.
+
+### 4.6 Versão do Prisma — downgrade de 7 para 6.x
+
+**Decisão**: usar Prisma na linha 6.x, não a 7 (que veio instalada por padrão ao rodar `npx prisma init` nesta fase do projeto).
+
+**Porquê**: a versão 7 exige uma configuração nova (`prisma.config.ts` obrigatório, mudança de como a `DATABASE_URL` é resolvida) que ainda tem pouca documentação e poucos tutoriais maduros. Dado o prazo de 7 dias, priorizei a versão estável e amplamente documentada — menos superfície de coisa nova pra debugar, mais tempo pra regra de negócio. Isso significa: `schema.prisma` resolve a conexão sozinho via `datasource db { url = env("DATABASE_URL") }`, sem `prisma.config.ts` na raiz do backend.
+
+### 4.7 Schema do banco
+
+Modelagem inicial com 10 tabelas, cobrindo os três papéis (organizador, cliente, portaria) e o fluxo completo de reserva → pagamento → ingresso → validação:
+
+- **User** — usuários da plataforma, com papel (role: organizador / cliente / portaria)
+- **Movie** — cópia local dos dados relevantes do filme vindos da TMDb (título, sinopse, pôster) no momento em que o organizador cria uma sessão — ver decisão de "copiar vs buscar ao vivo" já discutida
+- **Room** — sala de exibição, com sua disposição de assentos
+- **Seat** — assento individual, pertencente a uma sala
+- **Session** — a "sessão" de fato: um filme (`Movie`) numa sala (`Room`), em uma data/horário, com preço definido pelo organizador
+- **Reservation** — a reserva feita por um cliente para uma sessão
+- **ReservationSeat** — tabela de junção entre `Reservation` e `Seat`, com a constraint `UNIQUE(sessionId, seatId)` que impede o mesmo assento ser reservado duas vezes na mesma sessão (ver decisão 4.8)
+- **Ticket** — o ingresso gerado após pagamento confirmado, com o payload assinado (JWT) usado no QR code
+- **ValidationLog** — registro de cada tentativa de validação na portaria (para rastrear "já utilizado" e auditoria)
+- **Payment** — registro da simulação de pagamento (confirmado ou recusado)
+
+*(Diagrama de relacionamento entre as tabelas: a incluir aqui numa próxima atualização, se fizer sentido para clareza.)*
+
+### 4.8 Concorrência no assento — constraint UNIQUE, não lock manual
+
+**Decisão**: a garantia de que o mesmo assento não seja vendido duas vezes vem de uma constraint `UNIQUE(sessionId, seatId)` na tabela `ReservationSeat`, aplicada dentro de uma transação Prisma.
+
+**Porquê**: delegar essa garantia ao próprio banco (constraint de unicidade) é mais robusto do que implementar um lock otimista ou pessimista na aplicação — o Postgres rejeita a segunda tentativa de insert automaticamente, mesmo sob concorrência real (duas requisições simultâneas), sem eu precisar reinventar controle de concorrência na camada de aplicação. Menos código próprio para errar, dado o prazo.
+
+### 4.9 QR code do ingresso — JWT assinado (HS256)
+
+**Decisão**: o conteúdo do QR code é um JWT assinado (HS256), não um HMAC construído manualmente nem um ID cru do banco.
+
+**Porquê**:
+- Um ID cru seria trivialmente forjável (ou adivinhável) — não atende ao requisito de QR "que não possa ser forjado".
+- Reaproveita a mesma biblioteca e o mesmo modelo mental já usado na autenticação (JWT + Argon2id), reduzindo a quantidade de código novo e criptografia própria pra debugar em 7 dias.
+- JWT já resolve expiração de forma nativa (`exp`), o que é útil para invalidar ingressos de sessões já encerradas.
+
+**Pendente de detalhar**: o payload exato do JWT do ticket (quais campos entram — ex: `ticketId`, `sessionId`, `seatId` — e o tempo de expiração escolhido). Ver seção 6.
+
+### 4.10 Pendente de decisão
 - Provedor de hospedagem gerenciada para backend + PostgreSQL (Railway, Render, Fly.io, Neon, etc.)
-- Estratégia exata de assinatura do QR code (ex: JWT assinado, HMAC com segredo do servidor — a detalhar)
-- Estrutura de tabelas / schema do banco (a detalhar)
-- Estratégia de lock/transação para evitar venda dupla do assento (a detalhar)
+- Payload exato do JWT do ticket e seu tempo de expiração
 - Identidade visual concreta do Cinema Arcano: paleta, tipografia, nome das telas/estados (a detalhar)
-- Plano dia-a-dia para os 7 dias (a detalhar)
+- Plano dia-a-dia para os dias restantes do prazo (a detalhar)
 
 ---
 
@@ -187,12 +251,13 @@ Consolidado dentro da stack final (seção 4.1): NestJS concentra toda a lógica
 ## 6. Perguntas em aberto / a resolver nas próximas sessões
 
 - [ ] Escolher provedor de hospedagem para backend + Postgres gerenciado
-- [ ] Desenhar schema do banco (tabelas: usuários/papéis, eventos, sessões, assentos, reservas, ingressos)
-- [ ] Definir estratégia técnica do QR não forjável
-- [ ] Definir estratégia de concorrência no assento (transação SQL, lock otimista, etc.)
+- [ ] Definir payload exato do JWT do ticket (campos e tempo de expiração)
 - [ ] Definir identidade visual do Cinema Arcano (paleta, tipografia, tom de voz das telas)
-- [ ] Montar plano dia-a-dia dos 7 dias (prazo final: 25/08/2026, 13:03)
-- [ ] Definir estrutura de pastas do monorepo (front + back)
+- [ ] Montar plano dia-a-dia para os dias restantes do prazo (faltam ~5 dias até 25/08/2026, 13:03)
+- [x] ~~Definir estrutura de pastas do monorepo (front + back)~~ — feito, ver seção 4.1 e estrutura no repositório (`frontend/`, `backend/`)
+- [x] ~~Desenhar schema do banco~~ — feito, ver seção 4.7
+- [x] ~~Definir estratégia técnica do QR não forjável~~ — feito, ver seção 4.9
+- [x] ~~Definir estratégia de concorrência no assento~~ — feito, ver seção 4.8
 
 ---
 
@@ -202,3 +267,4 @@ Consolidado dentro da stack final (seção 4.1): NestJS concentra toda a lógica
 |---|---|
 | 19/08/2026 | Criação do documento. Decisões iniciais: TMDb, mapa de assentos. |
 | 19/08/2026 | Confirmado prazo real (e-mail recebido 18/08 13:03 → entrega até 25/08 13:03). Definida identidade do produto: Cinema Arcano. Stack final fechada: Next.js + NestJS + Prisma + PostgreSQL + JWT/Argon2id/RBAC próprios (substitui a hipótese anterior de Supabase como banco por trás de uma API própria). Documento reescrito em primeira pessoa. |
+| 20/08/2026 | Estrutura do monorepo criada (`frontend/` Next.js, `backend/` NestJS). Banco local via Docker Compose (Postgres 16) documentado. Downgrade de Prisma 7 para 6.x, com justificativa. Schema do banco (10 tabelas) documentado. Decisões de QR (JWT assinado HS256) e concorrência de assento (constraint `UNIQUE`) transcritas com justificativa. Primeira migration (`init`) aplicada com sucesso ao banco. |

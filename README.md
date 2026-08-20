@@ -2,7 +2,7 @@
 
 > Plataforma de eventos e ingressos com identidade própria — desenvolvida como projeto técnico para o processo seletivo Elite Dev (Verzel).
 
-**Status**: 🚧 Em desenvolvimento — projeto iniciado em 19/08/2026, prazo de entrega em 25/08/2026.
+**Status**: 🚧 Em desenvolvimento — projeto iniciado em 19/08/2026, prazo de entrega em 25/08/2026. Monorepo estruturado, banco local (PostgreSQL via Docker) rodando e schema já migrado. Código de aplicação (rotas, autenticação, telas) ainda não iniciado.
 
 ## Sobre
 
@@ -16,9 +16,27 @@ Next.js · NestJS · Prisma · PostgreSQL · TypeScript
 
 Detalhes da arquitetura e justificativas de cada escolha em [`docs/PROJETO.md`](./docs/PROJETO.md#4-decisões-técnicas-tomadas-até-agora).
 
+## Estrutura do repositório
+
+```
+cinema-arcano/
+├── docs/PROJETO.md   → decisões de produto e arquitetura, com justificativas
+├── backend/           → API NestJS + Prisma + PostgreSQL
+└── frontend/          → Next.js + TypeScript
+```
+
 ## Como rodar
 
-_Em breve — instruções completas de setup serão adicionadas conforme o projeto avança._
+Instruções completas (setup de front, back e variáveis de ambiente) estão nos READMEs de cada pacote: [`backend/README.md`](./backend/README.md) e [`frontend/README.md`](./frontend/README.md).
+
+Resumo do backend (banco de dados):
+```bash
+cd backend
+docker compose up -d        # sobe PostgreSQL 16 local
+npx prisma migrate dev       # aplica o schema ao banco
+```
+
+_Instruções de setup completas de ponta a ponta (incluindo variáveis de ambiente e seed de dados) serão consolidadas aqui conforme o projeto avança._
 
 ## Uso de IA neste projeto
 

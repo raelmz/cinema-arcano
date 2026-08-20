@@ -1,5 +1,18 @@
 @import "tailwindcss";
 
+@theme {
+  --color-arcano-main: #ffd54f;
+  --color-arcano-sec: #7b1fa2;
+  --color-arcano-ter: #ff8f00;
+  --color-arcano-bg: #1a161d;
+  --color-arcano-surface: #161219;
+}
+
+body {
+  background-color: var(--color-arcano-bg);
+  color: white;
+}
+
 :root {
   --background: #ffffff;
   --foreground: #171717;
@@ -19,8 +32,3 @@
   }
 }
 
-body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
-}

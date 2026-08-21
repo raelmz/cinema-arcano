@@ -4,7 +4,7 @@
 
 **Última atualização**: 21/08/2026
 **Autor**: Israel Menezes de Andrade
-**Status**: Módulos Auth, Catálogo, Salas/Sessões, Reserva/Ingresso e Portaria **implementados e testados manualmente no backend/frontend onde aplicável**. Frontend já possui componentes reutilizáveis, criação e gerenciamento de sessões pelo organizador, exibição de sessões futuras, mapa de assentos, reserva, checkout com cartão/PIX, pagamento aprovado/recusado, área de Meus ingressos, ticket público com QR code, tela de validação da portaria, 404 personalizada e estados globais de loading/erro. Próximo bloco principal: deploy e revisão final.
+**Status**: Módulos Auth, Catálogo, Salas/Sessões, Reserva/Ingresso e Portaria **implementados e testados manualmente no backend/frontend onde aplicável**. Frontend já possui componentes reutilizáveis, criação e gerenciamento de sessões pelo organizador, exibição de sessões futuras, mapa de assentos, reserva, checkout com cartão/PIX, pagamento aprovado/recusado, área de Meus ingressos, ticket público com QR code, tela de validação da portaria com câmera/fallback manual, 404 personalizada, estados globais de loading/erro e bloqueio visual por papel nas páginas privadas. Próximo bloco principal: deploy e revisão final.
 
 ---
 
@@ -529,6 +529,14 @@ Estilo visual: **neo-brutalismo** — sem `border-radius`, bordas sólidas de 2p
 
 **Porquê**: o desafio pede pagamento simulado com confirmação e recusa. Fazer a recusa apenas com um alerta no frontend seria frágil e não demonstraria regra de negócio. Ao registrar `FAILED` e liberar assentos no backend, o fluxo fica auditável e testável. A 404/loading/error personalizada evita cair na aparência padrão do framework durante a avaliação.
 
+### 4.47 Ajustes de validação, acesso e produção
+
+**Decisão**: a leitura de QR da portaria passou de `BarcodeDetector` nativo para a biblioteca `html5-qrcode`, porque Chrome/Brave desktop podem não expor a API nativa de detecção. O ticket público agora também exibe o `qrToken` em texto e oferece botão de copiar, garantindo validação manual mesmo quando a câmera não estiver disponível.
+
+**Acesso por papel**: páginas privadas deixaram de redirecionar silenciosamente para a home e passaram a exibir um componente reutilizável `AcessoRestrito`, com mensagem contextual e links para login/catálogo. Isso foi aplicado em `/admin/sessions`, `/admin/sessions/new`, `/reservations`, `/reservations/[id]/payment` e `/gate`. A rota de backend `POST /gate/validate` passou a aceitar `GATE` e `ADMIN`.
+
+**Porquê**: para avaliação, falhas silenciosas parecem bugs. Uma tela de bloqueio explícita melhora UX, acessibilidade cognitiva e segurança percebida. O token copiável preserva o fluxo da portaria em qualquer dispositivo, sem depender de suporte do navegador à câmera/leitor.
+
 ---
 
 ## 5. Requisitos de entrega
@@ -572,6 +580,7 @@ Estilo visual: **neo-brutalismo** — sem `border-radius`, bordas sólidas de 2p
 - [x] ~~Meus ingressos / minhas reservas para cliente~~ — feito, ver seção 4.45
 - [x] ~~Recusa no pagamento simulado~~ — feito, ver seção 4.46
 - [x] ~~Página 404 personalizada e estados globais de loading/erro~~ — feito, ver seção 4.46
+- [x] ~~Fallback manual para validação de QR e proteção visual de rotas privadas~~ — feito, ver seção 4.47
 - [ ] Deploy (Vercel + Render) e variáveis de ambiente de produção
 - [ ] Revisão final do README com links públicos e lista do que ficou fora/pendente
 
@@ -598,3 +607,4 @@ Estilo visual: **neo-brutalismo** — sem `border-radius`, bordas sólidas de 2p
 | 21/08/2026 | Módulo de Portaria implementado: backend `GateModule` com `POST /gate/validate` restrito a `GATE`, validação de QR assinado, retorno `VALID`/`INVALID`/`ALREADY_USED`/`WRONG_EVENT`, marcação do ticket como `USED`, registro em `ValidationLog` e migration para permitir log de token inválido sem ticket associado. Frontend `/gate` criado com digitação manual e leitura por câmera via `BarcodeDetector` quando disponível (4.44). |
 | 21/08/2026 | Gerenciamento de sessões e Meus ingressos implementados: backend ganhou `GET /sessions/admin/mine` e `GET /reservations/me`; frontend ganhou `/admin/sessions` com listagem/contadores/cancelamento e `/reservations` para o cliente rever reservas, pagar pendentes e reabrir tickets. Header passou a mostrar atalhos por papel (4.45). |
 | 21/08/2026 | Checkout simulado implementado: nova rota `/reservations/[id]/payment` com cartão/PIX, aprovação e recusa; backend `POST /reservations/:id/pay` aceita método e falha simulada, grava `Payment FAILED`, cancela reserva e libera assentos. Criadas páginas globais `not-found.tsx`, `loading.tsx` e `error.tsx` para acabamento visual (4.46). |
+| 21/08/2026 | Ajustes de produção antes da entrega: portaria trocada para `html5-qrcode`, ticket exibe token copiável para validação manual, páginas privadas usam `AcessoRestrito` em vez de redirecionamento silencioso, e backend permite validação por `GATE` ou `ADMIN` (4.47). |

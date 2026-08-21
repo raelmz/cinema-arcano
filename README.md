@@ -39,6 +39,8 @@ Documentação completa do processo de decisão — requisitos, arquitetura, tra
 - ✅ Gerenciamento de sessões pelo organizador
 - ✅ Meus ingressos / minhas reservas para clientes
 - ✅ Página 404 personalizada e estados globais de loading/erro
+- ✅ Validação por QR com câmera e fallback manual copiável
+- ✅ Páginas privadas com bloqueio visual por papel
 - 🔜 Deploy (Vercel + Render)
 
 Plano dia-a-dia detalhado em [`docs/PROJETO.md`](./docs/PROJETO.md#413-fluxo-de-desenvolvimento-e-plano-dia-a-dia).
@@ -111,7 +113,7 @@ Após rodar o seed (`npx prisma db seed`), estas contas ficam disponíveis para 
 5. Clique em **Escolher assentos**, selecione lugares no mapa e crie a reserva.
 6. No checkout, escolha cartão ou PIX e simule aprovação ou recusa do pagamento.
 7. Reabra seus tickets em `/reservations`.
-8. Entre como portaria em `/gate`, cole o token do QR ou use a câmera, e valide o ingresso.
+8. Entre como portaria ou admin em `/gate`, cole o token do QR ou use a câmera, e valide o ingresso.
 
 <img src="https://capsule-render.vercel.app/api?type=rect&color=0F6E56&height=3&section=header" width="100%" />
 

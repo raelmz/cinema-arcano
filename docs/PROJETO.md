@@ -4,7 +4,7 @@
 
 **Última atualização**: 21/08/2026
 **Autor**: Israel Menezes de Andrade
-**Status**: Módulos Auth, Catálogo, Salas/Sessões, Reserva/Ingresso e Portaria **implementados e testados manualmente no backend/frontend onde aplicável**. Frontend já possui componentes reutilizáveis, criação e gerenciamento de sessões pelo organizador, exibição de sessões futuras, mapa de assentos, reserva, pagamento simulado, área de Meus ingressos, ticket público com QR code e tela de validação da portaria. Próximo bloco principal: deploy e revisão final.
+**Status**: Módulos Auth, Catálogo, Salas/Sessões, Reserva/Ingresso e Portaria **implementados e testados manualmente no backend/frontend onde aplicável**. Frontend já possui componentes reutilizáveis, criação e gerenciamento de sessões pelo organizador, exibição de sessões futuras, mapa de assentos, reserva, checkout com cartão/PIX, pagamento aprovado/recusado, área de Meus ingressos, ticket público com QR code, tela de validação da portaria, 404 personalizada e estados globais de loading/erro. Próximo bloco principal: deploy e revisão final.
 
 ---
 
@@ -66,7 +66,7 @@ Decidi dar identidade própria ao produto em vez de entregar um cinema genérico
 - [x] Navegação e busca de eventos publicados (data, local, preço) — catálogo de filmes via TMDb; ver seções 4.26 a 4.30
 - [x] Criação e gerenciamento de eventos/sessões pelo organizador — telas `/admin/sessions/new` e `/admin/sessions`
 - [x] Fluxo de reserva com seleção de lugar em mapa de assentos
-- [x] Pagamento simulado — caminho de confirmação implementado; recusa simulada ainda pode ser refinada
+- [x] Pagamento simulado — caminhos de aprovação e recusa implementados
 - [x] Ticket público com exibição do QR code
 - [x] Cliente consegue rever reservas/ingressos em `/reservations`
 - [x] Tela de portaria com retorno claro: válido / inválido / já utilizado / evento errado
@@ -519,6 +519,16 @@ Estilo visual: **neo-brutalismo** — sem `border-radius`, bordas sólidas de 2p
 
 **Porquê**: essas duas áreas reduzem dependência de fluxo linear para teste. O recrutador não precisa “perder” o link do ticket se sair da tela, e o organizador consegue conferir/cancelar sessões sem chamar a API manualmente. Mantive edição de sessão fora deste bloco porque cancelamento cobre a operação crítica do desafio sem introduzir regras ambíguas sobre alterar horário/preço depois de reservas existentes.
 
+### 4.46 Checkout simulado e estados de acabamento
+
+**Decisão**: o botão simples de pagamento foi substituído por uma tela dedicada em `/reservations/[id]/payment`, com seleção entre cartão e PIX, visual de cartão, PIX copia-e-cola simulado, resumo da reserva e dois caminhos explícitos: simular aprovação ou simular recusa. O endpoint `POST /reservations/:id/pay` passou a aceitar `method` (`CARD`/`PIX`) e `simulateFailure`.
+
+**Recusa de pagamento**: quando `simulateFailure` é verdadeiro, o backend grava `Payment FAILED`, cancela a reserva (`ReservationStatus.CANCELLED`), remove os `ReservationSeat` e não gera ticket. Assim a falha não é apenas visual: os assentos voltam de fato para o mapa.
+
+**Estados visuais**: foram criadas páginas globais do Next para `not-found.tsx`, `loading.tsx` e `error.tsx`, mantendo a identidade Cinema Arcano também em 404, carregamento e falha inesperada.
+
+**Porquê**: o desafio pede pagamento simulado com confirmação e recusa. Fazer a recusa apenas com um alerta no frontend seria frágil e não demonstraria regra de negócio. Ao registrar `FAILED` e liberar assentos no backend, o fluxo fica auditável e testável. A 404/loading/error personalizada evita cair na aparência padrão do framework durante a avaliação.
+
 ---
 
 ## 5. Requisitos de entrega
@@ -560,6 +570,8 @@ Estilo visual: **neo-brutalismo** — sem `border-radius`, bordas sólidas de 2p
 - [x] ~~Documentar contas de teste para o recrutador~~ — feito, ver seção 4.43
 - [x] ~~Módulo de Portaria: validação do QR, bloqueio de reuso e registro em `ValidationLog`~~ — feito, ver seção 4.44
 - [x] ~~Meus ingressos / minhas reservas para cliente~~ — feito, ver seção 4.45
+- [x] ~~Recusa no pagamento simulado~~ — feito, ver seção 4.46
+- [x] ~~Página 404 personalizada e estados globais de loading/erro~~ — feito, ver seção 4.46
 - [ ] Deploy (Vercel + Render) e variáveis de ambiente de produção
 - [ ] Revisão final do README com links públicos e lista do que ficou fora/pendente
 
@@ -585,3 +597,4 @@ Estilo visual: **neo-brutalismo** — sem `border-radius`, bordas sólidas de 2p
 | 21/08/2026 | Frontend de Reserva/Ingresso implementado: `GET /sessions/:id` passou a retornar assentos e ocupação; rota `/sessions/[id]` criada com mapa de assentos, criação de reserva `PENDING` e pagamento simulado; rota `/tickets/[id]` criada com ticket público e QR code real via `qrcode` (4.42). README atualizado com contas de teste do seed e roteiro rápido para o recrutador validar organizador → cliente → ticket (4.43). |
 | 21/08/2026 | Módulo de Portaria implementado: backend `GateModule` com `POST /gate/validate` restrito a `GATE`, validação de QR assinado, retorno `VALID`/`INVALID`/`ALREADY_USED`/`WRONG_EVENT`, marcação do ticket como `USED`, registro em `ValidationLog` e migration para permitir log de token inválido sem ticket associado. Frontend `/gate` criado com digitação manual e leitura por câmera via `BarcodeDetector` quando disponível (4.44). |
 | 21/08/2026 | Gerenciamento de sessões e Meus ingressos implementados: backend ganhou `GET /sessions/admin/mine` e `GET /reservations/me`; frontend ganhou `/admin/sessions` com listagem/contadores/cancelamento e `/reservations` para o cliente rever reservas, pagar pendentes e reabrir tickets. Header passou a mostrar atalhos por papel (4.45). |
+| 21/08/2026 | Checkout simulado implementado: nova rota `/reservations/[id]/payment` com cartão/PIX, aprovação e recusa; backend `POST /reservations/:id/pay` aceita método e falha simulada, grava `Payment FAILED`, cancela reserva e libera assentos. Criadas páginas globais `not-found.tsx`, `loading.tsx` e `error.tsx` para acabamento visual (4.46). |

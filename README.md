@@ -34,10 +34,11 @@ Documentação completa do processo de decisão — requisitos, arquitetura, tra
 - ✅ Backend de ingresso com QR code assinado (JWT)
 - ✅ Base de componentes reutilizáveis no frontend
 - ✅ Tela do organizador para criar sessões
-- ✅ Mapa de assentos, reserva, pagamento simulado e ticket com QR no frontend
+- ✅ Mapa de assentos, reserva, checkout com cartão/PIX, pagamento aprovado/recusado e ticket com QR no frontend
 - ✅ Validação de ingresso na portaria
 - ✅ Gerenciamento de sessões pelo organizador
 - ✅ Meus ingressos / minhas reservas para clientes
+- ✅ Página 404 personalizada e estados globais de loading/erro
 - 🔜 Deploy (Vercel + Render)
 
 Plano dia-a-dia detalhado em [`docs/PROJETO.md`](./docs/PROJETO.md#413-fluxo-de-desenvolvimento-e-plano-dia-a-dia).
@@ -108,7 +109,7 @@ Após rodar o seed (`npx prisma db seed`), estas contas ficam disponíveis para 
 3. Gerencie sessões em `/admin/sessions`, incluindo cancelamento.
 4. Saia, entre como cliente e abra um filme com sessão disponível.
 5. Clique em **Escolher assentos**, selecione lugares no mapa e crie a reserva.
-6. Confirme o pagamento simulado e acesse o ticket público com QR code.
+6. No checkout, escolha cartão ou PIX e simule aprovação ou recusa do pagamento.
 7. Reabra seus tickets em `/reservations`.
 8. Entre como portaria em `/gate`, cole o token do QR ou use a câmera, e valide o ingresso.
 

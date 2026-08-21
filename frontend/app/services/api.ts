@@ -16,6 +16,18 @@ export async function login(data: any) {
   return response.json();
 }
 
+export async function getMe(token: string) {
+  const response = await fetch(`${API_URL}/auth/me`, {
+    headers: { Authorization: `Bearer ${token}` },
+  });
+
+  if (!response.ok) {
+    throw new Error('Não foi possível carregar os dados do usuário.');
+  }
+
+  return response.json();
+}
+
 export async function registerUser(data: any) {
   const response = await fetch(`${API_URL}/auth/register`, {
     method: 'POST',

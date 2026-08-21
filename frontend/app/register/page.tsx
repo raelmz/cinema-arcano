@@ -28,7 +28,8 @@ export default function RegisterPage() {
     try {
       await registerUser(data);
       setSuccess(true);
-      // Aqui, opcionalmente, podemos redirecionar direto para /login
+      // Cadastro não loga automaticamente — usuário segue para /login,
+      // mantendo o AuthContext como fonte única da sessão pós-login.
     } catch (err: any) {
       setError(err.message);
     }

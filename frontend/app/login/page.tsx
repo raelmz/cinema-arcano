@@ -4,8 +4,10 @@
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
-import { login } from '../services/api';
+import { login as loginRequest, getMe } from '../services/api';
 import { useState } from 'react';
+import { useRouter } from 'next/navigation';
+import { useAuth } from '../context/AuthContext';
 
 // Validação do Zod
 const loginSchema = z.object({
@@ -17,6 +19,8 @@ type LoginForm = z.infer<typeof loginSchema>;
 
 export default function LoginPage() {
   const [error, setError] = useState('');
+  const { login } = useAuth();
+  const router = useRouter();
   const { register, handleSubmit, formState: { errors, isSubmitting } } = useForm<LoginForm>({
     resolver: zodResolver(loginSchema),
   });
@@ -24,11 +28,11 @@ export default function LoginPage() {
   const onSubmit = async (data: LoginForm) => {
     setError('');
     try {
-      const result = await login(data);
-      // Salva o token no localStorage por enquanto
-      localStorage.setItem('arcano_token', result.accessToken);
-      // Redirecionar futuramente...
-      console.log('Logado com sucesso!', result);
+      const result = await loginRequest(data);
+      const user = await getMe(result.accessToken);
+
+      login(result.accessToken, user);
+      router.push('/');
     } catch (err: any) {
       setError(err.message);
     }

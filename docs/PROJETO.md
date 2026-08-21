@@ -4,7 +4,7 @@
 
 **Última atualização**: 20/08/2026
 **Autor**: Israel Menezes de Andrade
-**Status**: Módulo Auth completo (register, login, `/auth/me`, guards JWT/RBAC, seed) implementado e testado ponta a ponta, prestes a receber o commit único do módulo — demais módulos de aplicação (catálogo, reserva, pagamento, ticket, portaria) ainda não iniciados
+**Status**: Módulo Auth **completo, backend e frontend, ambos implementados, testados e commitados** — demais módulos de aplicação (catálogo, reserva, pagamento, ticket, portaria) ainda não iniciados
 
 ---
 
@@ -70,6 +70,8 @@ Decidi dar identidade própria ao produto em vez de entregar um cinema genérico
 - [ ] "Meus ingressos" com exibição do QR code
 - [ ] Tela de portaria com retorno claro: válido / inválido / já utilizado / evento errado
 - [ ] Leitura de QR via câmera na portaria, com digitação manual como alternativa
+
+*(Autenticação — login e cadastro — não está listada como item separado nesta seção porque é pré-requisito transversal aos itens acima, não um requisito funcional isolado do desafio. Está implementada; ver seção 4.20 a 4.24.)*
 
 ### Back-End
 - [ ] Integração com API externa de catálogo (ver decisão na seção 4)
@@ -258,8 +260,61 @@ Sobre a expiração: optei por atrelar o `exp` ao horário da sessão (em vez de
 
 **Pendente**: se o cold start atrapalhar a demonstração para o avaliador, considerar algum mecanismo simples de keep-alive (ex: ping periódico) — decisão a avaliar mais perto da entrega, sem prioridade agora.
 
-### 4.12 Pendente de decisão
-- Identidade visual concreta do Cinema Arcano: paleta, tipografia, nome das telas/estados (a detalhar)
+### 4.12 Identidade visual do Cinema Arcano — fechada
+
+**Decisão**: paleta e estilo definidos e já implementados no `globals.css` do frontend (Tailwind v4, via `@theme`):
+
+| Papel | Cor | Hex |
+|---|---|---|
+| Cor principal (destaque, botões, títulos) | Amarelo Arcano | `#ffd54f` |
+| Cor secundária (ações, hover) | Roxo Escuro | `#7b1fa2` |
+| Cor terciária (labels, acentos) | Laranja | `#ff8f00` |
+| Fundo | Quase-preto | `#1a161d` |
+| Superfície (cards, formulários) | Quase-preto (mais escuro) | `#161219` |
+
+Estilo visual: **neo-brutalismo** — sem `border-radius`, bordas sólidas de 2px, sombras duras (`box-shadow` deslocada, sem blur), tipografia em caixa alta com `tracking-widest` nos títulos e labels.
+
+**Porquê**: reforça a decisão já registrada na seção 2.1 (identidade "Cinema Arcano", ritual de entrada) sem gastar tempo do prazo em UX não-convencional — o neo-brutalismo dá personalidade visual forte com poucas regras de CSS (sem sombras suaves, sem cantos arredondados, sem gradientes), evitando o visual genérico de UI gerada por IA que o próprio desafio penaliza como "AI slop".
+
+### 4.20 Frontend — roteamento e formulários
+
+**Decisão**: roteamento via **App Router** do Next.js (`app/`); formulários com **`react-hook-form` + `zod`** (validação de schema), integrados via `@hookform/resolvers`.
+
+**Porquê**: App Router é o padrão atual do Next.js e o projeto já foi inicializado dessa forma. `react-hook-form` evita re-render a cada tecla digitada (melhor performance que estado controlado manual), e `zod` centraliza a validação em um schema só, reaproveitado tanto para o tipo TypeScript do formulário (`z.infer`) quanto para a validação em si — uma fonte de verdade, sem duplicar regras entre tipo e validação.
+
+### 4.21 Frontend — módulo Auth (login e cadastro)
+
+**Decisão**: páginas `app/login/page.tsx` e `app/register/page.tsx`, ambas client components (`'use client'`), consumindo `POST /auth/login` e `POST /auth/register` via um serviço centralizado (`app/services/api.ts`).
+
+**Porquê**: centralizar as chamadas HTTP em `api.ts` evita duplicar `fetch` e tratamento de erro em cada página — qualquer mudança de URL base ou de contrato da API muda em um lugar só. `NEXT_PUBLIC_API_URL` com fallback para `http://localhost:3001` permite rodar local sem `.env` configurado e trocar de ambiente (produção) só setando a variável.
+
+**Tratamento de erro**: tanto `login` quanto `registerUser` leem `errorData.message` do corpo da resposta do backend quando a requisição falha, com uma mensagem genérica de fallback caso o backend não retorne corpo JSON válido — assim o usuário vê o motivo real da falha (ex: e-mail já cadastrado) e não só um erro genérico, exceto quando o backend realmente não informa nada.
+
+### 4.22 Frontend — persistência do token (decisão provisória)
+
+**Decisão**: após login bem-sucedido, o `accessToken` retornado é salvo em `localStorage` (`arcano_token`).
+
+**Porquê**: solução mais simples para o prazo do desafio, sem exigir configuração de cookie `httpOnly` + proteção CSRF no backend. **Trade-off consciente**: `localStorage` é mais exposto a XSS do que um cookie `httpOnly` (qualquer script injetado na página consegue ler o token). Aceito esse risco porque o escopo do desafio não inclui conteúdo gerado por terceiros/usuários que pudesse virar vetor de XSS (não há campo de texto livre exibido sem sanitização para outros usuários). Redirecionamento pós-login e leitura desse token nas demais páginas ainda estão pendentes (ver seção 6).
+
+### 4.23 Frontend — escopo "Esqueci a senha" descartado, sem rastro na UI
+
+**Decisão**: a funcionalidade de recuperação de senha não será implementada (já estava fora de escopo — ver seção 3, "Fora de escopo"), e por isso **nenhum elemento de UI relacionado a ela existe** nas telas de login/cadastro.
+
+**Porquê**: um botão ou link de "esqueci minha senha" que não faz nada de útil (ex: só um alerta) é pior do que a simples ausência da funcionalidade — no desafio, "tudo o que existe na tela deve funcionar" pesa na nota, e um elemento morto chama mais atenção negativa do avaliador do que a decisão documentada de não ter recuperação de senha.
+
+### 4.24 Frontend — acessibilidade básica de formulários
+
+**Decisão**: todo `<label>` nos formulários usa `htmlFor` apontando para o `id` do `<input>` correspondente.
+
+**Porquê**: sem essa associação, clicar no texto do label não foca o campo e leitores de tela não conseguem relacionar a legenda ao input — ajuste de baixo custo que evita um problema básico de acessibilidade sem alterar nada visualmente.
+
+### 4.25 Frontend — estratégia de pós-login (Context API)
+
+**Decisão**: estado de autenticação pós-login gerenciado com **Context API** nativa do React (`AuthContext` + `AuthProvider`, em `app/context/AuthContext.tsx`), envolvendo toda a aplicação a partir do `layout.tsx`. Descartadas as alternativas Zustand e checagem manual de token por página.
+
+**Porquê**: o escopo atual é pequeno — poucas páginas, um único token de sessão — o que não justifica adicionar Zustand como dependência nova para aprender sob prazo apertado (mesmo racional já aplicado em outras decisões do projeto, como a guard própria sem Passport, seção 4.17). Context API resolve bem esse escopo sem lib externa. Checagem manual de token em cada página foi descartada por espalhar a lógica de sessão em vez de centralizá-la em um único lugar.
+
+**Implementação**: o `AuthProvider` lê `arcano_token`/`arcano_user` do `localStorage` ao montar (populando o contexto antes de qualquer redirecionamento de rota protegida) e expõe `user`, `token`, `login(token, user)` e `logout()`. `login/page.tsx` chama `POST /auth/login`, busca os dados do usuário via `GET /auth/me` (endpoint já existente do módulo Auth, seção 4.19) e então chama `login()` do contexto, redirecionando para `/` em seguida. `logout()` limpa tanto o contexto quanto o `localStorage`. A chamada extra a `/auth/me` evita duplicar no frontend a decisão de payload do JWT de sessão (que é responsabilidade do backend, seção 4.7) — o frontend sempre lê o usuário da mesma fonte, logo após login ou ao recarregar a página.
 
 ### 4.13 Fluxo de desenvolvimento e plano dia-a-dia
 
@@ -329,7 +384,7 @@ Sobre a expiração: optei por atrelar o `exp` ao horário da sessão (em vez de
 
 ## 6. Perguntas em aberto / a resolver nas próximas sessões
 
-- [ ] Definir identidade visual do Cinema Arcano (paleta, tipografia, tom de voz das telas)
+- [x] ~~Definir identidade visual do Cinema Arcano (paleta, tipografia, tom de voz das telas)~~ — feito, ver seção 4.12
 - [x] ~~Definir estrutura de pastas do monorepo (front + back)~~ — feito, ver seção 4.1 e estrutura no repositório (`frontend/`, `backend/`)
 - [x] ~~Desenhar schema do banco~~ — feito, ver seção 4.7 (conferido visualmente no Prisma Studio)
 - [x] ~~Definir estratégia técnica do QR não forjável~~ — feito, ver seção 4.9
@@ -339,6 +394,10 @@ Sobre a expiração: optei por atrelar o `exp` ao horário da sessão (em vez de
 - [x] ~~Montar plano dia-a-dia para os dias restantes do prazo~~ — feito, ver seção 4.13
 - [x] ~~Implementar módulo Auth completo (register, login, guards JWT/RBAC, seed)~~ — feito, ver seções 4.14 a 4.19
 - [x] ~~Validar `RolesGuard` com usuários reais~~ — feito, ver seção 4.18 (ADMIN 200, CUSTOMER/GATE 403)
+- [x] ~~Implementar frontend de Auth (login, cadastro)~~ — feito, ver seções 4.20 a 4.24
+- [x] ~~Estratégia de pós-login: redirecionamento após login e forma das demais páginas saberem que o usuário está autenticado~~ — feito, Context API, ver seção 4.25
+- [ ] Limpeza opcional: remover boilerplate morto do `globals.css` (`:root`, `@theme inline`, `@media prefers-color-scheme`, sobras do `create-next-app` não usadas pelo tema Cinema Arcano)
+- [ ] Iniciar módulo Catálogo (integração TMDb) — backend e frontend
 
 ---
 
@@ -352,3 +411,5 @@ Sobre a expiração: optei por atrelar o `exp` ao horário da sessão (em vez de
 | 20/08/2026 | Tabelas conferidas visualmente no Prisma Studio (10 modelos, vazios, estrutura correta). Payload do JWT do ticket definido e documentado (campos + estratégia de expiração atrelada ao horário da sessão). |
 | 20/08/2026 | Provedor de hospedagem gerenciada definido: Render, free tier, para backend + PostgreSQL. Trade-off de cold start documentado e aceito, priorizando durabilidade do projeto para portfólio. Fluxo de desenvolvimento definido como intercalado (backend → frontend por módulo). Plano dia-a-dia fechado para os 5 dias restantes do prazo. |
 | 20/08/2026 | Módulo Auth implementado e testado por completo: `AuthService`/`AuthController` (register + login), `PrismaService`/`PrismaModule` (global), `JwtAuthGuard` e `RolesGuard` (sem Passport), `GET /auth/me`, e `prisma/seed.ts` (1 ADMIN, 2 CUSTOMERs, 1 GATE, senhas Argon2id). Decisões documentadas: registro sempre como CUSTOMER via API (4.14), commit único por módulo funcional (4.15), PrismaModule global (4.16), guard própria sem Passport (4.17). `RolesGuard` validada com os 4 usuários reais do seed (4.18). `/auth/me` liberado para qualquer papel autenticado, sem restrição por role (4.19). |
+| 20/08/2026 | Frontend do módulo Auth implementado e commitado: identidade visual do Cinema Arcano fechada (paleta amarelo/roxo/preto, neo-brutalismo — 4.12); roteamento via App Router e formulários com `react-hook-form` + `zod` (4.20); páginas de login e cadastro consumindo a API via serviço centralizado `api.ts`, com tratamento de erro lendo a mensagem real do backend (4.21); token salvo em `localStorage`, trade-off de XSS documentado, persistência/redirecionamento pós-login ainda pendente (4.22); escopo "esqueci a senha" confirmado descartado, sem nenhum elemento de UI residual (4.23); acessibilidade básica de formulários com `htmlFor`/`id` em todos os labels (4.24). |
+| 20/08/2026 | Estratégia de pós-login implementada: `AuthContext`/`AuthProvider` (Context API nativa, sem Zustand) criado em `app/context/AuthContext.tsx` e envolvendo a aplicação em `layout.tsx`; lê `localStorage` ao montar, expõe `user`/`token`/`login`/`logout`. `login/page.tsx` passou a buscar o usuário via `GET /auth/me` após o login e redirecionar para `/`; `api.ts` ganhou a função `getMe`. Decisão documentada (4.25). |

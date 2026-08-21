@@ -61,7 +61,13 @@ export default function TicketPage() {
         ← Voltar para o catálogo
       </Link>
 
-      {carregando && <p className="mt-8 text-white/50">Carregando ingresso...</p>}
+      {carregando && (
+        <Cartao className="mt-8 p-6">
+          <p className="animate-pulse font-mono text-sm uppercase tracking-wide text-white/50">
+            Carregando ingresso...
+          </p>
+        </Cartao>
+      )}
 
       {!carregando && erro && (
         <div className="mt-6">
@@ -82,10 +88,10 @@ export default function TicketPage() {
                 <img
                   src={qrCodeUrl}
                   alt="QR code do ingresso"
-                  className="border-2 border-arcano-main"
+                  className="h-auto w-full max-w-[280px] border-2 border-arcano-main"
                 />
               ) : (
-                <div className="h-[280px] w-[280px] border-2 border-white/10" />
+                <div className="aspect-square w-full max-w-[280px] border-2 border-white/10" />
               )}
             </div>
 
@@ -114,7 +120,7 @@ export default function TicketPage() {
             <p className="text-xs font-bold uppercase tracking-wide text-white/40">
               Sessão
             </p>
-            <h2 className="mt-1 text-2xl font-black text-white">
+            <h2 className="mt-1 text-2xl font-black leading-tight text-white">
               {ingresso.reservation.session.movie.title}
             </h2>
 

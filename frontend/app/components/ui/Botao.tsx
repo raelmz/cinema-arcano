@@ -26,7 +26,7 @@ export function Botao({
   return (
     <button
       type={type}
-      className={`border-2 px-4 py-3 text-sm font-bold uppercase tracking-wide transition-colors disabled:cursor-not-allowed disabled:opacity-50 ${estilos[variante]} ${className}`}
+      className={`inline-flex items-center justify-center border-2 px-4 py-3 text-center text-sm font-bold uppercase tracking-wide transition-colors disabled:cursor-not-allowed disabled:opacity-50 ${estilos[variante]} ${className}`}
       {...props}
     >
       {children}

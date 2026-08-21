@@ -142,18 +142,18 @@ export default function GatePage() {
 
   return (
     <main>
-      <Container className="py-10">
+      <Container className="py-8 sm:py-10">
         <div className="mb-8">
           <p className="font-mono text-sm uppercase tracking-wide text-arcano-main">
             Portaria
           </p>
-          <h1 className="mt-2 text-3xl font-black uppercase text-white md:text-5xl">
+          <h1 className="mt-2 text-3xl font-black uppercase leading-tight text-white md:text-5xl">
             Validação de ingresso
           </h1>
         </div>
 
         <div className="grid gap-6 lg:grid-cols-[1fr_0.9fr]">
-          <Cartao>
+          <Cartao className="p-4 sm:p-5">
             <div className="space-y-5">
               <CampoTexto
                 id="session-id"
@@ -175,13 +175,13 @@ export default function GatePage() {
                   value={qrToken}
                   onChange={(event) => setQrToken(event.target.value)}
                   placeholder="Cole aqui o conteúdo lido no QR"
-                  className="min-h-40 w-full border-2 border-gray-700 bg-arcano-bg p-3 font-mono text-sm text-white placeholder:text-white/30 focus:border-arcano-main focus:outline-none"
+                  className="min-h-40 w-full resize-y border-2 border-gray-700 bg-arcano-bg p-3 font-mono text-base text-white placeholder:text-white/30 focus:border-arcano-main focus:outline-none sm:text-sm"
                 />
               </div>
 
               {erro && <Aviso tipo="erro">{erro}</Aviso>}
 
-              <div className="flex flex-wrap gap-3">
+              <div className="grid gap-3 sm:grid-cols-2">
                 <Botao onClick={() => validar()} disabled={carregando}>
                   {carregando ? 'Validando...' : 'Validar ingresso'}
                 </Botao>
@@ -195,14 +195,14 @@ export default function GatePage() {
 
               <div
                 id="leitor-qr-portaria"
-                className={`overflow-hidden border-2 border-arcano-main bg-black ${
+                className={`aspect-square max-w-[360px] overflow-hidden border-2 border-arcano-main bg-black ${
                   cameraAtiva ? 'block' : 'hidden'
                 }`}
               />
             </div>
           </Cartao>
 
-          <Cartao className="min-h-80">
+          <Cartao className="min-h-80 p-4 sm:p-5">
             {resultado && detalhesResultado ? (
               <div
                 className={`border-2 p-5 ${detalhesResultado.classe}`}
@@ -210,7 +210,7 @@ export default function GatePage() {
                 <p className="font-mono text-sm uppercase tracking-wide">
                   {resultado.result}
                 </p>
-                <h2 className="mt-2 text-3xl font-black uppercase">
+                <h2 className="mt-2 text-2xl font-black uppercase leading-tight sm:text-3xl">
                   {detalhesResultado.titulo}
                 </h2>
                 <p className="mt-3 font-bold">{resultado.message}</p>

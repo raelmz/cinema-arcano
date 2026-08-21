@@ -144,19 +144,31 @@ export default function NovaSessaoPage() {
 
       <div className="grid gap-6 lg:grid-cols-[1.15fr_0.85fr]">
         <Cartao className="p-5">
-          <form onSubmit={buscarFilmes} className="mb-5 flex gap-2">
+          <form
+            onSubmit={buscarFilmes}
+            className="mb-5 grid gap-2 sm:grid-cols-[1fr_auto]"
+          >
             <input
               value={busca}
               onChange={(event) => setBusca(event.target.value)}
               placeholder="Buscar filme..."
               aria-label="Buscar filme"
-              className="min-w-0 flex-1 border-2 border-white/10 bg-arcano-bg px-4 py-3 text-sm text-white placeholder:text-white/30 focus:border-arcano-main focus:outline-none"
+              className="min-w-0 border-2 border-white/10 bg-arcano-bg px-4 py-3 text-base text-white placeholder:text-white/30 focus:border-arcano-main focus:outline-none sm:text-sm"
             />
-            <Botao type="submit">Buscar</Botao>
+            <Botao type="submit" className="w-full sm:w-auto">
+              Buscar
+            </Botao>
           </form>
 
           {carregandoFilmes && (
-            <p className="text-sm text-white/50">Carregando filmes...</p>
+            <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+              {Array.from({ length: 8 }).map((_, index) => (
+                <Cartao
+                  key={index}
+                  className="aspect-[2/3] animate-pulse bg-white/[0.04]"
+                />
+              ))}
+            </div>
           )}
 
           {!carregandoFilmes && filmes.length === 0 && (
@@ -194,7 +206,7 @@ export default function NovaSessaoPage() {
                     )}
                   </div>
                   <div className="p-2">
-                    <p className="line-clamp-2 text-xs font-bold text-white">
+                    <p className="line-clamp-2 text-xs font-bold leading-snug text-white">
                       {filme.title}
                     </p>
                   </div>

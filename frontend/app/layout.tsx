@@ -28,8 +28,16 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
     >
       <body className="min-h-full flex flex-col">
         <AuthProvider>
+          <a
+            href="#conteudo-principal"
+            className="sr-only focus:not-sr-only focus:fixed focus:left-4 focus:top-4 focus:z-50 focus:border-2 focus:border-arcano-main focus:bg-arcano-main focus:px-4 focus:py-3 focus:text-sm focus:font-bold focus:uppercase focus:text-arcano-bg"
+          >
+            Pular para o conteúdo
+          </a>
           <Cabecalho />
-          <main className="flex flex-1 flex-col">{children}</main>
+          <main id="conteudo-principal" className="flex flex-1 flex-col">
+            {children}
+          </main>
           <Rodape />
         </AuthProvider>
       </body>

@@ -170,7 +170,13 @@ export default function AdminSessionsPage() {
         </div>
       )}
 
-      {carregando && <p className="text-white/50">Carregando sessões...</p>}
+      {carregando && (
+        <div className="space-y-4">
+          {Array.from({ length: 3 }).map((_, index) => (
+            <Cartao key={index} className="h-32 animate-pulse bg-white/[0.04]" />
+          ))}
+        </div>
+      )}
 
       {!carregando && sessoes.length === 0 && (
         <Cartao className="p-6">
@@ -182,7 +188,7 @@ export default function AdminSessionsPage() {
         {sessoes.map((sessao) => (
           <Cartao key={sessao.id} className="p-5">
             <div className="flex flex-col gap-5 lg:flex-row lg:items-center lg:justify-between">
-              <div>
+              <div className="min-w-0">
                 <div className="mb-2 flex flex-wrap items-center gap-2">
                   <span className="border-2 border-white/15 px-2 py-1 font-mono text-xs uppercase text-white/55">
                     {labelsStatus[sessao.status]}
@@ -191,7 +197,7 @@ export default function AdminSessionsPage() {
                     {formatarMoeda(sessao.price)}
                   </span>
                 </div>
-                <h2 className="text-xl font-black text-white">
+                <h2 className="break-words text-xl font-black leading-tight text-white">
                   {sessao.movie.title}
                 </h2>
                 <p className="mt-1 text-sm text-white/55">
@@ -199,7 +205,7 @@ export default function AdminSessionsPage() {
                 </p>
               </div>
 
-              <dl className="grid min-w-72 grid-cols-3 gap-3 text-center">
+              <dl className="grid w-full grid-cols-3 gap-3 text-center lg:w-auto lg:min-w-72">
                 <div className="border-2 border-white/10 p-3">
                   <dt className="font-mono text-[10px] uppercase text-white/40">
                     Reservas
@@ -226,10 +232,10 @@ export default function AdminSessionsPage() {
                 </div>
               </dl>
 
-              <div className="flex flex-wrap gap-3">
+              <div className="grid gap-3 sm:grid-cols-2 lg:flex lg:flex-wrap">
                 <Link
                   href={`/sessions/${sessao.id}`}
-                  className="border-2 border-white/20 px-4 py-3 text-sm font-bold uppercase tracking-wide text-white/70 hover:border-arcano-main hover:text-arcano-main"
+                  className="inline-flex items-center justify-center border-2 border-white/20 px-4 py-3 text-center text-sm font-bold uppercase tracking-wide text-white/70 hover:border-arcano-main hover:text-arcano-main"
                 >
                   Ver mapa
                 </Link>

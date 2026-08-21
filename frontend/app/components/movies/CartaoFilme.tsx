@@ -12,7 +12,7 @@ export function CartaoFilme({ filme }: CartaoFilmeProps) {
   return (
     <Link
       href={`/movies/${filme.id}`}
-      className="group flex h-full flex-col overflow-hidden border-2 border-white/10 bg-arcano-surface transition-transform hover:-translate-y-1 hover:border-arcano-main"
+      className="group flex h-full min-w-0 flex-col overflow-hidden border-2 border-white/10 bg-arcano-surface transition-transform hover:-translate-y-1 hover:border-arcano-main"
     >
       <div className="relative aspect-[2/3] w-full bg-black/30">
         {filme.posterUrl ? (
@@ -30,7 +30,7 @@ export function CartaoFilme({ filme }: CartaoFilmeProps) {
         )}
       </div>
       <div className="flex flex-1 flex-col justify-between p-3">
-        <h2 className="line-clamp-2 text-sm font-bold text-white group-hover:text-arcano-main">
+        <h2 className="line-clamp-2 text-sm font-bold leading-snug text-white group-hover:text-arcano-main">
           {filme.title}
         </h2>
         <p className="mt-2 text-xs text-white/40">

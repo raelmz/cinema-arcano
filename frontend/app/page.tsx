@@ -7,6 +7,7 @@ import { Botao } from './components/ui/Botao';
 import { Container } from './components/ui/Container';
 import { CartaoFilme } from './components/movies/CartaoFilme';
 import { Aviso } from './components/ui/Aviso';
+import { Cartao } from './components/ui/Cartao';
 
 export default function Home() {
   const [movies, setMovies] = useState<Movie[]>([]);
@@ -73,19 +74,22 @@ export default function Home() {
             mapa da sala.
           </p>
 
-          <form onSubmit={handleSearch} className="mt-6 flex max-w-xl gap-2">
-          <input
-            type="text"
-            value={query}
-            onChange={(e) => setQuery(e.target.value)}
-            placeholder="Buscar filme..."
-            aria-label="Buscar filme"
-            className="min-w-0 flex-1 border-2 border-white/10 bg-arcano-surface px-4 py-3 text-sm text-white placeholder:text-white/30 focus:border-arcano-main focus:outline-none"
-          />
-          <Botao type="submit" className="shrink-0">
-            Buscar
-          </Botao>
-        </form>
+          <form
+            onSubmit={handleSearch}
+            className="mt-6 grid max-w-xl gap-2 sm:grid-cols-[1fr_auto]"
+          >
+            <input
+              type="text"
+              value={query}
+              onChange={(e) => setQuery(e.target.value)}
+              placeholder="Buscar filme..."
+              aria-label="Buscar filme"
+              className="min-w-0 border-2 border-white/10 bg-arcano-surface px-4 py-3 text-base text-white placeholder:text-white/30 focus:border-arcano-main focus:outline-none sm:text-sm"
+            />
+            <Botao type="submit" className="w-full sm:w-auto">
+              Buscar
+            </Botao>
+          </form>
         </section>
 
         {activeQuery && !isLoading && (
@@ -100,12 +104,23 @@ export default function Home() {
           </p>
         )}
 
-        {isLoading && <p className="text-white/50">Carregando...</p>}
+        {isLoading && (
+          <div className="grid grid-cols-2 gap-5 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5">
+            {Array.from({ length: 10 }).map((_, index) => (
+              <Cartao
+                key={index}
+                className="aspect-[2/3] animate-pulse bg-white/[0.04]"
+              />
+            ))}
+          </div>
+        )}
 
         {!isLoading && error && <Aviso tipo="erro">{error}</Aviso>}
 
         {!isLoading && !error && movies.length === 0 && (
-          <p className="text-white/50">Nenhum filme encontrado.</p>
+          <Cartao className="p-6">
+            <p className="text-white/60">Nenhum filme encontrado.</p>
+          </Cartao>
         )}
 
         {!isLoading && !error && movies.length > 0 && (

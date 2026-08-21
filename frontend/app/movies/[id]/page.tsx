@@ -17,11 +17,11 @@ export default async function MovieDetailsPage({
 
   const [movie, sessions] = await Promise.all([
     getMovieDetails(id).catch((err: unknown) => {
-    // Backend devolve 404 quando o filme não existe no TMDb
-    if (err instanceof Error && err.message === 'Filme não encontrado.') {
-      notFound();
-    }
-    throw err;
+      // Backend devolve 404 quando o filme não existe no TMDb.
+      if (err instanceof Error && err.message === 'Filme não encontrado.') {
+        notFound();
+      }
+      throw err;
     }),
     getSessions().catch(() => []),
   ]);
@@ -58,7 +58,7 @@ export default async function MovieDetailsPage({
         </div>
 
         <div>
-          <h1 className="text-2xl font-bold text-white sm:text-3xl">
+          <h1 className="text-3xl font-black uppercase tracking-wide text-white sm:text-4xl">
             {movie.title}
           </h1>
 
@@ -81,7 +81,7 @@ export default async function MovieDetailsPage({
               {movie.genres.map((genre) => (
                 <span
                   key={genre}
-                  className="rounded-full bg-arcano-surface px-3 py-1 text-xs text-white/70"
+                  className="border-2 border-white/10 bg-arcano-surface px-3 py-1 text-xs text-white/70"
                 >
                   {genre}
                 </span>
@@ -125,7 +125,7 @@ export default async function MovieDetailsPage({
                     </p>
                     <Link
                       href={`/sessions/${sessao.id}`}
-                      className="mt-4 inline-block border-2 border-arcano-main bg-arcano-main px-4 py-2 text-sm font-bold uppercase tracking-wide text-arcano-bg hover:bg-arcano-ter"
+                      className="mt-4 inline-flex w-full items-center justify-center border-2 border-arcano-main bg-arcano-main px-4 py-2 text-center text-sm font-bold uppercase tracking-wide text-arcano-bg hover:bg-arcano-ter sm:w-auto"
                     >
                       Escolher assentos
                     </Link>

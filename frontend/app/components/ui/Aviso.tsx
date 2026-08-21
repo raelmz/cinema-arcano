@@ -15,7 +15,10 @@ const estilos = {
 
 export function Aviso({ children, tipo = 'info' }: AvisoProps) {
   return (
-    <div className={`border-2 p-3 font-mono text-sm ${estilos[tipo]}`}>
+    <div
+      role={tipo === 'erro' ? 'alert' : 'status'}
+      className={`border-2 p-3 font-mono text-sm ${estilos[tipo]}`}
+    >
       {children}
     </div>
   );

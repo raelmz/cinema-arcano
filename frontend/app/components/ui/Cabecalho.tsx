@@ -17,7 +17,7 @@ export function Cabecalho() {
 
   return (
     <header className="border-b-2 border-white/10 bg-arcano-bg">
-      <Container className="flex flex-col gap-4 py-5 sm:flex-row sm:items-center sm:justify-between">
+      <Container className="flex flex-col gap-4 py-5 lg:flex-row lg:items-center lg:justify-between">
         <Link href="/" className="group w-fit">
           <span className="block text-2xl font-black uppercase tracking-wide text-arcano-main">
             Cinema Arcano
@@ -27,21 +27,24 @@ export function Cabecalho() {
           </span>
         </Link>
 
-        <nav className="flex flex-wrap items-center gap-3 text-sm font-bold uppercase tracking-wide">
-          <Link className="text-white/70 hover:text-arcano-main" href="/">
+        <nav
+          aria-label="Navegação principal"
+          className="flex flex-wrap items-center gap-2 text-xs font-bold uppercase tracking-wide sm:gap-3 sm:text-sm"
+        >
+          <Link className="px-1 py-2 text-white/70 hover:text-arcano-main" href="/">
             Catálogo
           </Link>
 
           {user?.role === 'ADMIN' && (
             <>
               <Link
-                className="text-white/70 hover:text-arcano-main"
+                className="px-1 py-2 text-white/70 hover:text-arcano-main"
                 href="/admin/sessions"
               >
                 Sessões
               </Link>
               <Link
-                className="text-white/70 hover:text-arcano-main"
+                className="px-1 py-2 text-white/70 hover:text-arcano-main"
                 href="/admin/sessions/new"
               >
                 Nova Sessão
@@ -51,7 +54,7 @@ export function Cabecalho() {
 
           {user?.role === 'CUSTOMER' && (
             <Link
-              className="text-white/70 hover:text-arcano-main"
+              className="px-1 py-2 text-white/70 hover:text-arcano-main"
               href="/reservations"
             >
               Meus Ingressos
@@ -60,7 +63,7 @@ export function Cabecalho() {
 
           {user?.role === 'GATE' && (
             <Link
-              className="text-white/70 hover:text-arcano-main"
+              className="px-1 py-2 text-white/70 hover:text-arcano-main"
               href="/gate"
             >
               Portaria
@@ -69,7 +72,7 @@ export function Cabecalho() {
 
           {!isLoading && !user && (
             <>
-              <Link className="text-white/70 hover:text-arcano-main" href="/login">
+              <Link className="px-1 py-2 text-white/70 hover:text-arcano-main" href="/login">
                 Entrar
               </Link>
               <Link

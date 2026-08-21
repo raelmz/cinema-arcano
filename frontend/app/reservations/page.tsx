@@ -99,7 +99,13 @@ export default function ReservationsPage() {
         </div>
       )}
 
-      {carregando && <p className="text-white/50">Carregando reservas...</p>}
+      {carregando && (
+        <div className="grid gap-4">
+          {Array.from({ length: 3 }).map((_, index) => (
+            <Cartao key={index} className="h-32 animate-pulse bg-white/[0.04]" />
+          ))}
+        </div>
+      )}
 
       {!carregando && reservas.length === 0 && (
         <Cartao className="p-6">
@@ -114,7 +120,7 @@ export default function ReservationsPage() {
         {reservas.map((reserva) => (
           <Cartao key={reserva.id} className="p-5">
             <div className="flex flex-col gap-5 lg:flex-row lg:items-center lg:justify-between">
-              <div>
+              <div className="min-w-0">
                 <div className="mb-2 flex flex-wrap items-center gap-2">
                   <span className="border-2 border-white/15 px-2 py-1 font-mono text-xs uppercase text-white/55">
                     {labelsStatus[reserva.status]}
@@ -125,7 +131,7 @@ export default function ReservationsPage() {
                     </span>
                   )}
                 </div>
-                <h2 className="text-xl font-black text-white">
+                <h2 className="break-words text-xl font-black leading-tight text-white">
                   {reserva.session.movie.title}
                 </h2>
                 <p className="mt-1 text-sm text-white/55">
@@ -136,7 +142,7 @@ export default function ReservationsPage() {
                 </p>
               </div>
 
-              <div className="min-w-48 border-2 border-white/10 p-4">
+              <div className="w-full border-2 border-white/10 p-4 sm:w-auto sm:min-w-48">
                 <p className="font-mono text-xs uppercase text-white/40">
                   Total
                 </p>
@@ -148,23 +154,23 @@ export default function ReservationsPage() {
                 </p>
               </div>
 
-              <div className="flex flex-wrap gap-3">
+              <div className="grid gap-3 sm:grid-cols-2 lg:flex lg:flex-wrap">
                 {reserva.ticket ? (
                   <Link
                     href={`/tickets/${reserva.ticket.id}`}
-                    className="border-2 border-arcano-main bg-arcano-main px-4 py-3 text-sm font-bold uppercase tracking-wide text-arcano-bg hover:bg-arcano-ter"
+                    className="inline-flex items-center justify-center border-2 border-arcano-main bg-arcano-main px-4 py-3 text-center text-sm font-bold uppercase tracking-wide text-arcano-bg hover:bg-arcano-ter"
                   >
                     Abrir ticket
                   </Link>
                 ) : reserva.status === 'PENDING' ? (
                   <Link
                     href={`/reservations/${reserva.id}/payment`}
-                    className="border-2 border-arcano-sec bg-arcano-sec px-4 py-3 text-sm font-bold uppercase tracking-wide text-white hover:border-arcano-main hover:bg-arcano-main hover:text-arcano-bg"
+                    className="inline-flex items-center justify-center border-2 border-arcano-sec bg-arcano-sec px-4 py-3 text-center text-sm font-bold uppercase tracking-wide text-white hover:border-arcano-main hover:bg-arcano-main hover:text-arcano-bg"
                   >
                     Pagar
                   </Link>
                 ) : (
-                  <span className="border-2 border-white/10 px-4 py-3 text-sm font-bold uppercase tracking-wide text-white/35">
+                  <span className="inline-flex items-center justify-center border-2 border-white/10 px-4 py-3 text-center text-sm font-bold uppercase tracking-wide text-white/35">
                     Sem ticket
                   </span>
                 )}

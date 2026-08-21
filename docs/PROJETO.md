@@ -4,7 +4,7 @@
 
 **Última atualização**: 21/08/2026
 **Autor**: Israel Menezes de Andrade
-**Status**: Módulos Auth, Catálogo, Salas/Sessões, Reserva/Ingresso e Portaria **implementados e testados manualmente no backend/frontend onde aplicável**. Deploy realizado: frontend em Vercel (`https://cinema-arcano.vercel.app`) e backend/PostgreSQL em Render (`https://cinema-arcano-api.onrender.com`). Frontend já possui componentes reutilizáveis, criação e gerenciamento de sessões pelo organizador, exibição de sessões futuras, mapa de assentos, reserva, checkout com cartão/PIX, pagamento aprovado/recusado, área de Meus ingressos, ticket público com QR code, tela de validação da portaria com câmera/fallback manual, 404 personalizada, estados globais de loading/erro e bloqueio visual por papel nas páginas privadas. Próximo bloco principal: polimento visual premium e revisão final.
+**Status**: Módulos Auth, Catálogo, Salas/Sessões, Reserva/Ingresso e Portaria **implementados e testados manualmente no backend/frontend onde aplicável**. Deploy realizado: frontend em Vercel (`https://cinema-arcano.vercel.app`) e backend/PostgreSQL em Render (`https://cinema-arcano-api.onrender.com`). Frontend já possui componentes reutilizáveis, criação e gerenciamento de sessões pelo organizador, exibição de sessões futuras, mapa de assentos, reserva, checkout com cartão/PIX, pagamento aprovado/recusado, área de Meus ingressos, ticket público com QR code, tela de validação da portaria com câmera/fallback manual, 404 personalizada, estados globais de loading/erro, bloqueio visual por papel nas páginas privadas e primeira revisão de responsividade/acessibilidade. Próximo bloco principal: revisão visual premium final e validação ponta a ponta em produção.
 
 ---
 
@@ -554,6 +554,14 @@ Estilo visual: **neo-brutalismo** — sem `border-radius`, bordas sólidas de 2p
 
 **Trade-off**: no free tier do Render, o backend pode dormir após inatividade. Isso causa cold start na primeira requisição, aceito por ser projeto de desafio/portfólio e já documentado no README.
 
+### 4.49 Revisão de responsividade e acessibilidade
+
+**Decisão**: antes do polimento visual final, fiz uma passada técnica nas telas principais para reduzir atritos em mobile e melhorar acessibilidade básica. A aplicação ganhou skip link para o conteúdo principal, estilos globais de `:focus-visible`, `Aviso` com `role="alert"`/`status`, inputs com tamanho adequado em mobile, botões com alinhamento consistente e cards preparados para não estourar em grids responsivos.
+
+**Telas revisadas**: catálogo, detalhes do filme, criação/listagem de sessões do organizador, mapa de assentos, checkout, Meus ingressos, ticket e portaria. Estados simples de texto foram trocados por skeletons ou cards em pontos críticos; textos longos passam a quebrar linha corretamente; QR code e prévia de cartão respeitam largura máxima no celular.
+
+**Porquê**: como o projeto será avaliado por um recrutador em ambiente real, responsividade e acessibilidade básica entram como parte da qualidade percebida. A intenção foi reforçar a robustez da experiência sem fazer uma reescrita visual grande antes da revisão premium final.
+
 ---
 
 ## 5. Requisitos de entrega
@@ -600,7 +608,8 @@ Estilo visual: **neo-brutalismo** — sem `border-radius`, bordas sólidas de 2p
 - [x] ~~Fallback manual para validação de QR e proteção visual de rotas privadas~~ — feito, ver seção 4.47
 - [x] ~~Deploy (Vercel + Render) e variáveis de ambiente de produção~~ — feito, ver seção 4.48
 - [x] ~~Revisão final do README com links públicos~~ — feito, ver seção 4.48
-- [ ] Polimento visual premium e revisão final de responsividade/acessibilidade
+- [x] ~~Primeira revisão de responsividade/acessibilidade e estados visuais por tela~~ — feito, ver seção 4.49
+- [ ] Polimento visual premium final
 
 ---
 
@@ -627,3 +636,4 @@ Estilo visual: **neo-brutalismo** — sem `border-radius`, bordas sólidas de 2p
 | 21/08/2026 | Checkout simulado implementado: nova rota `/reservations/[id]/payment` com cartão/PIX, aprovação e recusa; backend `POST /reservations/:id/pay` aceita método e falha simulada, grava `Payment FAILED`, cancela reserva e libera assentos. Criadas páginas globais `not-found.tsx`, `loading.tsx` e `error.tsx` para acabamento visual (4.46). |
 | 21/08/2026 | Ajustes de produção antes da entrega: portaria trocada para `html5-qrcode`, ticket exibe token copiável para validação manual, páginas privadas usam `AcessoRestrito` em vez de redirecionamento silencioso, e backend permite validação por `GATE` ou `ADMIN` (4.47). |
 | 21/08/2026 | Deploy realizado: backend/PostgreSQL no Render, frontend na Vercel, seed de produção confirmado via login, CORS de produção configurado com `FRONTEND_URL`, e README atualizado com links públicos e roteiro de teste em produção (4.48). |
+| 21/08/2026 | Primeira revisão de responsividade/acessibilidade aplicada no frontend: skip link, foco visível, avisos com roles semânticas, skeletons em telas principais, ajustes mobile no QR/ticket, checkout, portaria, mapa de assentos, reservas e gerenciamento de sessões (4.49). |

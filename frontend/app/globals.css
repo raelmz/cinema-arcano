@@ -17,3 +17,24 @@ body {
   background-color: var(--color-arcano-bg);
   color: white;
 }
+
+html {
+  scroll-behavior: smooth;
+}
+
+::selection {
+  background: var(--color-arcano-main);
+  color: var(--color-arcano-bg);
+}
+
+:focus-visible {
+  outline: 3px solid var(--color-arcano-main);
+  outline-offset: 3px;
+}
+
+button,
+a,
+input,
+textarea {
+  min-width: 0;
+}

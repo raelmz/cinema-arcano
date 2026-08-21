@@ -109,7 +109,13 @@ export default function SessionPage() {
         ← Voltar para o catálogo
       </Link>
 
-      {carregando && <p className="mt-8 text-white/50">Carregando sessão...</p>}
+      {carregando && (
+        <Cartao className="mt-8 p-6">
+          <p className="animate-pulse font-mono text-sm uppercase tracking-wide text-white/50">
+            Carregando sessão...
+          </p>
+        </Cartao>
+      )}
 
       {!carregando && erro && (
         <div className="mt-6">
@@ -120,7 +126,7 @@ export default function SessionPage() {
       {!carregando && sessao && (
         <div className="mt-6 grid gap-6 lg:grid-cols-[1fr_360px]">
           <section>
-            <h1 className="text-3xl font-black uppercase tracking-wide text-arcano-main">
+            <h1 className="break-words text-3xl font-black uppercase leading-tight tracking-wide text-arcano-main">
               {sessao.movie.title}
             </h1>
             <p className="mt-2 text-sm text-white/55">
@@ -142,11 +148,11 @@ export default function SessionPage() {
                   const seatsInRow = assentos.filter((seat) => seat.row === row);
 
                   return (
-                    <div key={row} className="grid grid-cols-[28px_1fr] gap-3">
+                    <div key={row} className="grid grid-cols-[24px_1fr] gap-2 sm:grid-cols-[28px_1fr] sm:gap-3">
                       <span className="flex items-center text-sm font-bold text-white/50">
                         {linhas[rowIndex] ?? row}
                       </span>
-                      <div className="grid grid-cols-4 gap-2 sm:grid-cols-8">
+                      <div className="grid grid-cols-4 gap-1.5 sm:grid-cols-8 sm:gap-2">
                         {seatsInRow.map((seat) => {
                           const ocupado = assentosOcupados.has(seat.id);
                           const selecionado = assentosSelecionados.includes(seat.id);
@@ -157,7 +163,7 @@ export default function SessionPage() {
                               type="button"
                               disabled={ocupado || Boolean(reserva)}
                               onClick={() => alternarAssento(seat.id)}
-                              className={`aspect-square border-2 text-xs font-black transition-colors ${
+                              className={`aspect-square min-h-9 border-2 text-xs font-black transition-colors ${
                                 ocupado
                                   ? 'cursor-not-allowed border-white/10 bg-white/10 text-white/25'
                                   : selecionado

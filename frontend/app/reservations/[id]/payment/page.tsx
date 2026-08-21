@@ -188,8 +188,8 @@ export default function PaymentPage() {
 
             {metodo === 'CARD' ? (
               <div className="space-y-5">
-                <div className="border-2 border-arcano-main bg-arcano-sec p-5 text-white">
-                  <div className="flex items-center justify-between">
+                <div className="min-w-0 border-2 border-arcano-main bg-arcano-sec p-5 text-white">
+                  <div className="flex items-center justify-between gap-3">
                     <span className="font-mono text-xs uppercase tracking-wide">
                       Cinema Arcano
                     </span>
@@ -197,11 +197,11 @@ export default function PaymentPage() {
                       VISA
                     </span>
                   </div>
-                  <p className="mt-8 font-mono text-xl font-black tracking-wide">
+                  <p className="mt-8 break-all font-mono text-lg font-black tracking-wide sm:text-xl">
                     {numeroCartao || '0000 0000 0000 0000'}
                   </p>
-                  <div className="mt-6 flex justify-between font-mono text-xs uppercase">
-                    <span>{nomeCartao || 'Nome no cartão'}</span>
+                  <div className="mt-6 flex flex-wrap justify-between gap-3 font-mono text-xs uppercase">
+                    <span className="break-words">{nomeCartao || 'Nome no cartão'}</span>
                     <span>{validade || 'MM/AA'}</span>
                   </div>
                 </div>
@@ -248,7 +248,7 @@ export default function PaymentPage() {
               </div>
             )}
 
-            <div className="mt-6 flex flex-wrap gap-3">
+            <div className="mt-6 grid gap-3 sm:grid-cols-2">
               <Botao
                 variante="secundario"
                 disabled={processando || reserva.status !== 'PENDING'}
@@ -271,7 +271,7 @@ export default function PaymentPage() {
               Resumo
             </h2>
             <div className="mt-5 space-y-3 text-sm text-white/70">
-              <p className="text-xl font-black text-white">
+              <p className="text-xl font-black leading-tight text-white">
                 {reserva.session.movie.title}
               </p>
               <p>{formatarAssentos(reserva)}</p>

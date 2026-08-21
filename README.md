@@ -42,6 +42,7 @@ Documentação completa do processo de decisão — requisitos, arquitetura, tra
 - ✅ Validação por QR com câmera e fallback manual copiável
 - ✅ Páginas privadas com bloqueio visual por papel
 - ✅ Deploy (Vercel + Render)
+- ✅ Primeira revisão de responsividade, acessibilidade e estados visuais
 
 ## Links de produção
 

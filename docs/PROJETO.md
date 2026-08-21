@@ -4,7 +4,7 @@
 
 **Última atualização**: 21/08/2026
 **Autor**: Israel Menezes de Andrade
-**Status**: Módulos Auth e Catálogo **completos, backend e frontend, ambos implementados, testados e commitados**. Módulos Salas/Sessões e Reserva/Ingresso **concluídos no backend, testados manualmente e commitados**. Frontend de Salas/Sessões iniciado com componentes reutilizáveis, header/footer globais, tela administrativa de criação de sessões e exibição de sessões futuras no detalhe do filme. Frontend de Reserva/Ingresso e módulo de Portaria ainda pendentes.
+**Status**: Módulos Auth, Catálogo, Salas/Sessões e Reserva/Ingresso **implementados, testados manualmente e commitados no backend/frontend onde aplicável**. Frontend já possui componentes reutilizáveis, criação de sessões pelo organizador, exibição de sessões futuras, mapa de assentos, reserva, pagamento simulado e ticket público com QR code. Módulo de Portaria ainda pendente.
 
 ---
 
@@ -65,9 +65,9 @@ Decidi dar identidade própria ao produto em vez de entregar um cinema genérico
 ### Front-End
 - [x] Navegação e busca de eventos publicados (data, local, preço) — catálogo de filmes via TMDb; ver seções 4.26 a 4.30
 - [x] Criação de eventos/sessões pelo organizador — tela `/admin/sessions/new`; gerenciamento/cancelamento pelo front ainda pendente
-- [ ] Fluxo de reserva com seleção de lugar em mapa de assentos
-- [ ] Pagamento simulado — com caminho de confirmação **e** de recusa
-- [ ] "Meus ingressos" com exibição do QR code
+- [x] Fluxo de reserva com seleção de lugar em mapa de assentos
+- [x] Pagamento simulado — caminho de confirmação implementado; recusa simulada ainda pode ser refinada
+- [x] Ticket público com exibição do QR code
 - [ ] Tela de portaria com retorno claro: válido / inválido / já utilizado / evento errado
 - [ ] Leitura de QR via câmera na portaria, com digitação manual como alternativa
 
@@ -484,6 +484,20 @@ Estilo visual: **neo-brutalismo** — sem `border-radius`, bordas sólidas de 2p
 
 **Porquê**: o desafio pede transparência sobre uso de IA, e essa troca afetou o fluxo de trabalho. O principal ganho do Codex neste projeto foi o acesso direto à pasta de trabalho: ler os arquivos reais, aplicar patches, rodar `lint`/`build`, verificar status do Git e manter o contexto local mais fiel reduziu retrabalho e consumo de tokens com cópias manuais de arquivo. Ainda assim, as decisões de produto e arquitetura continuam registradas e justificadas neste documento, em primeira pessoa.
 
+### 4.42 Frontend de Reserva/Ingresso
+
+**Decisão**: criada a rota `/sessions/[id]` para o cliente escolher assentos em mapa, criar reserva `PENDING`, confirmar pagamento simulado e ser redirecionado para `/tickets/[id]`. A rota pública `/tickets/[id]` exibe os dados do ingresso e gera um QR code real no frontend usando a biblioteca `qrcode`.
+
+**Ajuste necessário no backend**: `GET /sessions/:id` passou a devolver `room.seats` e `occupiedSeatIds`, considerando como ocupados assentos de reservas `CONFIRMED` e reservas `PENDING` ainda não expiradas. Isso permite que o frontend desenhe o mapa com assentos livres/ocupados sem criar uma rota separada só para disponibilidade.
+
+**Porquê**: o mapa de assentos é o coração técnico do desafio no papel de cliente. Mostrar o estado dos assentos no detalhe da sessão e conduzir reserva → pagamento → ticket fecha um fluxo ponta a ponta visível para avaliação. O QR é gerado no frontend a partir do `qrToken` assinado pelo backend; assim o segredo de assinatura continua só na API.
+
+### 4.43 Credenciais de teste no README
+
+**Decisão**: documentar no README as contas criadas pelo seed (`ADMIN`, dois `CUSTOMER` e `GATE`) com e-mail, senha e uso sugerido.
+
+**Porquê**: o recrutador precisa conseguir testar o sistema rapidamente, sem abrir `seed.ts` nem adivinhar credenciais. Como são contas de seed para ambiente de avaliação/desenvolvimento, deixá-las explícitas no README melhora a testabilidade e reduz fricção. Em produção real, essas senhas não existiriam como credenciais públicas.
+
 ---
 
 ## 5. Requisitos de entrega
@@ -521,7 +535,8 @@ Estilo visual: **neo-brutalismo** — sem `border-radius`, bordas sólidas de 2p
 - [x] ~~Iniciar frontend de Salas/Sessões~~ — feito, ver seção 4.40
 - [ ] Limpeza opcional: remover boilerplate morto do `globals.css` (`:root`, `@theme inline`, `@media prefers-color-scheme`, sobras do `create-next-app` não usadas pelo tema Cinema Arcano)
 - [ ] Frontend de Salas/Sessões: gerenciamento/cancelamento de sessões pelo organizador
-- [ ] Frontend de Reserva/Ingresso: mapa de assentos, pagamento simulado e tela pública do ticket
+- [x] ~~Frontend de Reserva/Ingresso: mapa de assentos, pagamento simulado e tela pública do ticket~~ — feito, ver seção 4.42
+- [x] ~~Documentar contas de teste para o recrutador~~ — feito, ver seção 4.43
 - [ ] Módulo de Portaria: validação do QR, bloqueio de reuso e registro em `ValidationLog`
 
 ---
@@ -543,3 +558,4 @@ Estilo visual: **neo-brutalismo** — sem `border-radius`, bordas sólidas de 2p
 | 21/08/2026 | `schema.prisma` conferido contra todas as decisões do módulo Salas/Sessões (4.31/4.32) — sem inconsistência, sem migration de estrutura pendente. Enum `SessionStatus` (`SCHEDULED`/`CANCELLED`/`FINISHED`), presente no schema mas sem decisão registrada até então, decidido: escopo mínimo, só `SCHEDULED`/`CANCELLED` geridos pela aplicação (organizador pode cancelar sessão sem deletar a linha, e a validação de conflito de horário passa a ignorar sessões `CANCELLED`), `FINISHED` é só calculado na consulta, nunca persistido (4.33). Seed de `Room`/`Seat` ainda não escrita — pendente antes de iniciar o `SessionsModule`. |
 | 21/08/2026 | Backend de Salas/Sessões concluído e commitado: seed de sala/assentos, `SessionsModule`, conflito de horário, cancelamento, status `FINISHED` calculado, `roomId` implícito, fallback de 120 minutos e vínculo entre TMDb e `Movie` local via upsert (4.34 a 4.37). Backend de Reserva/Ingresso concluído e commitado: `ReservationsModule`, reserva `PENDING`, pagamento simulado, ticket público, QR/JWT com expiração no fim da sessão, liberação on-the-fly de reservas expiradas e teste manual completo (4.38). |
 | 21/08/2026 | Frontend de Salas/Sessões iniciado: componentes reutilizáveis criados (`Cabecalho`, `Rodape`, `Container`, `Cartao`, `Botao`, `CampoTexto`, `Aviso`, `CartaoFilme`), telas existentes refatoradas para usar a base visual, `/admin/sessions/new` implementada para criação de sessões por ADMIN, detalhes do filme exibindo sessões futuras, e script `npm run dev` do frontend fixado na porta 3001 para evitar conflito com o backend na 3000 (4.39/4.40). Uso de IA atualizado: migração de Claude Sonnet para ChatGPT Codex documentada por limitações de crédito e pela vantagem de acesso direto ao workspace (4.41). |
+| 21/08/2026 | Frontend de Reserva/Ingresso implementado: `GET /sessions/:id` passou a retornar assentos e ocupação; rota `/sessions/[id]` criada com mapa de assentos, criação de reserva `PENDING` e pagamento simulado; rota `/tickets/[id]` criada com ticket público e QR code real via `qrcode` (4.42). README atualizado com contas de teste do seed e roteiro rápido para o recrutador validar organizador → cliente → ticket (4.43). |

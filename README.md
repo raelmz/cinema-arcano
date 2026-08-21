@@ -34,7 +34,7 @@ Documentação completa do processo de decisão — requisitos, arquitetura, tra
 - ✅ Backend de ingresso com QR code assinado (JWT)
 - ✅ Base de componentes reutilizáveis no frontend
 - ✅ Tela do organizador para criar sessões
-- 🔜 Mapa de assentos e fluxo de reserva no frontend
+- ✅ Mapa de assentos, reserva, pagamento simulado e ticket com QR no frontend
 - 🔜 Validação de ingresso na portaria
 - 🔜 Deploy (Vercel + Render)
 
@@ -85,6 +85,27 @@ npx prisma db seed          # cria usuários iniciais (1 organizador, 2 clientes
 ```
 
 _Instruções de setup completas de ponta a ponta serão consolidadas aqui conforme o projeto avança._
+
+<img src="https://capsule-render.vercel.app/api?type=rect&color=0F6E56&height=3&section=header" width="100%" />
+
+## Contas de teste
+
+Após rodar o seed (`npx prisma db seed`), estas contas ficam disponíveis para testar os três papéis do sistema:
+
+| Papel | E-mail | Senha | Uso sugerido |
+|---|---|---|---|
+| Organizador | `admin@cinemaarcano.com` | `Admin@123` | Criar sessões em `/admin/sessions/new` |
+| Cliente | `cliente1@cinemaarcano.com` | `Cliente1@123` | Reservar assentos, pagar e gerar ticket |
+| Cliente | `cliente2@cinemaarcano.com` | `Cliente2@123` | Testar disputa de assento/reserva com outro cliente |
+| Portaria | `portaria@cinemaarcano.com` | `Portaria@123` | Usuário preparado para o módulo de validação de ingressos |
+
+### Roteiro rápido de teste
+
+1. Suba o backend em `http://localhost:3000` e o frontend em `http://localhost:3001`.
+2. Entre como organizador e crie uma sessão em `/admin/sessions/new`.
+3. Saia, entre como cliente e abra um filme com sessão disponível.
+4. Clique em **Escolher assentos**, selecione lugares no mapa e crie a reserva.
+5. Confirme o pagamento simulado e acesse o ticket público com QR code.
 
 <img src="https://capsule-render.vercel.app/api?type=rect&color=0F6E56&height=3&section=header" width="100%" />
 

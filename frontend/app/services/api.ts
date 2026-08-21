@@ -104,7 +104,57 @@ export type Sessao = {
     name: string;
     rows: number;
     seatsPerRow: number;
+    seats?: Assento[];
   };
+  occupiedSeatIds?: string[];
+};
+
+export type Assento = {
+  id: string;
+  roomId: string;
+  row: number;
+  number: number;
+};
+
+export type Reserva = {
+  id: string;
+  sessionId: string;
+  userId: string;
+  status: 'PENDING' | 'CONFIRMED' | 'CANCELLED' | 'EXPIRED';
+  createdAt: string;
+  expiresAt?: string;
+  totalAmount?: string;
+  session: Sessao;
+  seats: Array<{
+    id: string;
+    reservationId: string;
+    sessionId: string;
+    seatId: string;
+    seat: Assento;
+  }>;
+  ticket: Ingresso | null;
+  payment: {
+    id: string;
+    reservationId: string;
+    status: 'PENDING' | 'APPROVED' | 'FAILED';
+    amount: string;
+    method: string;
+    paidAt: string | null;
+    createdAt: string;
+  } | null;
+};
+
+export type Ingresso = {
+  id: string;
+  reservationId: string;
+  qrToken: string;
+  status: 'VALID' | 'USED' | 'CANCELLED';
+  usedAt: string | null;
+  createdAt: string;
+};
+
+export type IngressoPublico = Ingresso & {
+  reservation: Reserva;
 };
 
 export async function getMovies(): Promise<Movie[]> {
@@ -170,6 +220,66 @@ export async function getSessions(): Promise<Sessao[]> {
 
   if (!response.ok) {
     throw new Error('Não foi possível carregar as sessões.');
+  }
+
+  return response.json();
+}
+
+export async function getSession(id: string): Promise<Sessao> {
+  const response = await fetch(`${API_URL}/sessions/${id}`);
+
+  if (!response.ok) {
+    const errorData = await response.json().catch(() => ({}));
+    throw new Error(errorData.message || 'Não foi possível carregar a sessão.');
+  }
+
+  return response.json();
+}
+
+export async function createReservation(
+  token: string,
+  data: { sessionId: string; seatIds: string[] },
+): Promise<Reserva> {
+  const response = await fetch(`${API_URL}/reservations`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${token}`,
+    },
+    body: JSON.stringify(data),
+  });
+
+  if (!response.ok) {
+    const errorData = await response.json().catch(() => ({}));
+    throw new Error(errorData.message || 'Não foi possível criar a reserva.');
+  }
+
+  return response.json();
+}
+
+export async function payReservation(
+  token: string,
+  reservationId: string,
+): Promise<Reserva & { ticket: Ingresso }> {
+  const response = await fetch(`${API_URL}/reservations/${reservationId}/pay`, {
+    method: 'POST',
+    headers: { Authorization: `Bearer ${token}` },
+  });
+
+  if (!response.ok) {
+    const errorData = await response.json().catch(() => ({}));
+    throw new Error(errorData.message || 'Não foi possível confirmar o pagamento.');
+  }
+
+  return response.json();
+}
+
+export async function getTicket(id: string): Promise<IngressoPublico> {
+  const response = await fetch(`${API_URL}/tickets/${id}`);
+
+  if (!response.ok) {
+    const errorData = await response.json().catch(() => ({}));
+    throw new Error(errorData.message || 'Não foi possível carregar o ingresso.');
   }
 
   return response.json();

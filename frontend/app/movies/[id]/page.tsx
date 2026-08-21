@@ -123,6 +123,12 @@ export default async function MovieDetailsPage({
                         currency: 'BRL',
                       }).format(Number(sessao.price))}
                     </p>
+                    <Link
+                      href={`/sessions/${sessao.id}`}
+                      className="mt-4 inline-block border-2 border-arcano-main bg-arcano-main px-4 py-2 text-sm font-bold uppercase tracking-wide text-arcano-bg hover:bg-arcano-ter"
+                    >
+                      Escolher assentos
+                    </Link>
                   </Cartao>
                 ))}
               </div>

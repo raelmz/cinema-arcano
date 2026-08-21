@@ -102,16 +102,45 @@ export class SessionsService {
   }
 
   async findOne(id: string) {
+    const reservationExpirationLimit = new Date(Date.now() - 60 * 60_000);
     const session = await this.prisma.session.findUnique({
       where: { id },
-      include: { movie: true, room: true },
+      include: {
+        movie: true,
+        room: {
+          include: {
+            seats: {
+              orderBy: [{ row: 'asc' }, { number: 'asc' }],
+            },
+          },
+        },
+        reservationSeats: {
+          where: {
+            reservation: {
+              OR: [
+                { status: 'CONFIRMED' },
+                {
+                  status: 'PENDING',
+                  createdAt: { gte: reservationExpirationLimit },
+                },
+              ],
+            },
+          },
+          select: { seatId: true },
+        },
+      },
     });
 
     if (!session) {
       throw new NotFoundException('Sessão não encontrada.');
     }
 
-    return this.withComputedStatus(session);
+    return {
+      ...this.withComputedStatus(session),
+      occupiedSeatIds: session.reservationSeats.map(
+        (reservationSeat) => reservationSeat.seatId,
+      ),
+    };
   }
 
   // Cancelamento não deleta a linha (decisão 4.33) — preserva Reservation/

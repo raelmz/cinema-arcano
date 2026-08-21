@@ -2,9 +2,9 @@
 
 > Este é o meu diário de decisões para o desafio técnico da Verzel (Elite Dev). Uso IA como apoio para organizar ideias, revisar trade-offs e manter esse registro atualizado a cada sessão — mas as decisões de produto e arquitetura são minhas. Mantenho isso versionado no repositório porque o próprio desafio pede transparência sobre processo, e porque documentar o "porquê" evita que decisões corretas pareçam arbitrárias numa leitura rápida do código.
 
-**Última atualização**: 20/08/2026
+**Última atualização**: 21/08/2026
 **Autor**: Israel Menezes de Andrade
-**Status**: Módulo Auth **completo, backend e frontend, ambos implementados, testados e commitados** — demais módulos de aplicação (catálogo, reserva, pagamento, ticket, portaria) ainda não iniciados
+**Status**: Módulos Auth e Catálogo **completos, backend e frontend, ambos implementados, testados e commitados** — Módulo Salas/Sessões com decisões de design fechadas (4.31–4.33), schema conferido, implementação ainda não iniciada — demais módulos de aplicação (reserva, pagamento, ticket, portaria) ainda não iniciados
 
 ---
 
@@ -63,7 +63,7 @@ Decidi dar identidade própria ao produto em vez de entregar um cinema genérico
 ## 3. Requisitos funcionais
 
 ### Front-End
-- [ ] Navegação e busca de eventos publicados (data, local, preço)
+- [x] Navegação e busca de eventos publicados (data, local, preço) — catálogo de filmes via TMDb; ver seções 4.26 a 4.30
 - [ ] Criação e gerenciamento de eventos (organizador)
 - [ ] Fluxo de reserva com seleção de lugar em mapa de assentos
 - [ ] Pagamento simulado — com caminho de confirmação **e** de recusa
@@ -74,7 +74,7 @@ Decidi dar identidade própria ao produto em vez de entregar um cinema genérico
 *(Autenticação — login e cadastro — não está listada como item separado nesta seção porque é pré-requisito transversal aos itens acima, não um requisito funcional isolado do desafio. Está implementada; ver seção 4.20 a 4.24.)*
 
 ### Back-End
-- [ ] Integração com API externa de catálogo (ver decisão na seção 4)
+- [x] Integração com API externa de catálogo (ver decisão na seção 4.26)
 - [ ] Autenticação com os 3 papéis
 - [ ] Persistência de eventos, reservas e ingressos
 - [ ] Garantia de que o mesmo assento não seja vendido duas vezes (concorrência)
@@ -286,7 +286,7 @@ Estilo visual: **neo-brutalismo** — sem `border-radius`, bordas sólidas de 2p
 
 **Decisão**: páginas `app/login/page.tsx` e `app/register/page.tsx`, ambas client components (`'use client'`), consumindo `POST /auth/login` e `POST /auth/register` via um serviço centralizado (`app/services/api.ts`).
 
-**Porquê**: centralizar as chamadas HTTP em `api.ts` evita duplicar `fetch` e tratamento de erro em cada página — qualquer mudança de URL base ou de contrato da API muda em um lugar só. `NEXT_PUBLIC_API_URL` com fallback para `http://localhost:3001` permite rodar local sem `.env` configurado e trocar de ambiente (produção) só setando a variável.
+**Porquê**: centralizar as chamadas HTTP em `api.ts` evita duplicar `fetch` e tratamento de erro em cada página — qualquer mudança de URL base ou de contrato da API muda em um lugar só. `NEXT_PUBLIC_API_URL` com fallback para `http://localhost:3000` (porta fixa do backend) permite rodar local sem `.env` configurado e trocar de ambiente (produção) só setando a variável. *(Nota: o fallback foi originalmente escrito como `3001` por engano — corrigido para `3000` ainda no dia 20/08, ver changelog.)*
 
 **Tratamento de erro**: tanto `login` quanto `registerUser` leem `errorData.message` do corpo da resposta do backend quando a requisição falha, com uma mensagem genérica de fallback caso o backend não retorne corpo JSON válido — assim o usuário vê o motivo real da falha (ex: e-mail já cadastrado) e não só um erro genérico, exceto quando o backend realmente não informa nada.
 
@@ -369,9 +369,60 @@ Estilo visual: **neo-brutalismo** — sem `border-radius`, bordas sólidas de 2p
 
 **Porquê**: o dado retornado por `/auth/me` já vem do próprio token decodificado (`req['user']`) — ou seja, cada usuário só enxerga os próprios dados, nunca os de outra pessoa. Restringir essa rota por papel não adiciona segurança nenhuma (não há vazamento de dado de terceiros possível) e quebraria a experiência normal: um CUSTOMER logado precisa conseguir ver o próprio perfil. `RolesGuard` fica reservada para rotas que de fato mexem em recursos de outra pessoa ou do sistema como um todo — por exemplo, futuramente, `POST /sessions` (publicar sessão de filme, ação do organizador) ou uma eventual rota de listagem de todos os usuários.
 
----
+### 4.26 Backend do Catálogo: proxy do TMDb com resposta mapeada
 
-## 5. Requisitos não funcionais
+**Decisão**: `MoviesModule`/`MoviesController`/`MoviesService` em `backend/src/movies/`, com três rotas públicas — `GET /movies` (populares), `GET /movies/search?query=`, `GET /movies/:id` (detalhes) — todas fazendo proxy para a API do TMDb via `fetch` nativo (sem `axios`). A resposta nunca repassa o payload bruto do TMDb: é mapeada para tipos próprios (`Movie`, com `id`/`title`/`overview`/`posterUrl`/`releaseDate`/`voteAverage`; `MovieDetails` estende `Movie` com `runtime`/`genres`). Idioma fixado em `pt-BR` em todas as chamadas ao TMDb.
+
+**Porquê**: mapear a resposta desacopla o frontend do formato específico do TMDb (campos em inglês tipo `poster_path`, `vote_average`) — se um dia trocar de provedor de catálogo, só o `MoviesService` muda, não todo o front. Rotas públicas porque catálogo é conteúdo de vitrine, sem motivo de negócio pra exigir login só pra ver filme.
+
+### 4.27 Frontend do Catálogo: Home, busca e detalhes
+
+**Decisão**: `app/page.tsx` (Home) lista os populares via `getMovies()` ao montar e permite busca via `searchMovies(query)`, reaproveitando o mesmo grid. Busca com campo vazio recarrega os populares em vez de chamar `/movies/search` sem query (o backend rejeita isso com 400). `app/movies/[id]/page.tsx` é *server component* (não `'use client'`), buscando os detalhes direto no servidor via `getMovieDetails(id)` e usando `notFound()` do Next quando o filme não existe. Três novas funções (`getMovies`, `searchMovies`, `getMovieDetails`) adicionadas em `app/services/api.ts`, seguindo o mesmo padrão de tratamento de erro (mensagem em português, lida do corpo da resposta) já usado nas funções de Auth.
+
+**Porquê do server component nos detalhes**: página de detalhes não tem nenhuma interação client-side (sem estado, sem formulário) — só busca e exibe. Buscar no servidor evita around-trip extra de loading state no cliente e é mais simples de implementar corretamente.
+
+### 4.28 Pôsteres via `next/image`, não `<img>` puro
+
+**Decisão**: exibição de pôster nas duas telas usa o componente `next/image`, exigindo `remotePatterns` em `next.config.ts` liberando `image.tmdb.org`.
+
+**Porquê**: `next/image` otimiza (lazy loading, dimensionamento automático) sem custo de implementação — só a config do domínio. Trade-off aceito: acopla o `next.config.ts` ao domínio específico do TMDb; se trocar de provedor de imagem no futuro, precisa lembrar de atualizar essa config também.
+
+### 4.29 CORS habilitado no backend
+
+**Decisão**: `app.enableCors({ origin: [...] })` adicionado em `main.ts`, liberando `http://localhost:3000` e `http://localhost:3001`.
+
+**Porquê**: bug encontrado em teste manual — backend fixo na porta 3000, e o Next cai pra 3001 quando a 3000 já está ocupada (justamente pelo próprio backend rodando). Sem `enableCors()`, toda chamada do frontend pro backend era bloqueada pelo navegador. Liberar as duas portas evita esse mesmo problema se a ordem de start mudar no dia a dia. Escopo é só local — pra produção (Vercel/Render), a allowlist vai precisar da URL real de deploy.
+
+### 4.30 Convenção: caminho do arquivo como comentário na primeira linha
+
+**Decisão**: todo arquivo novo ou editado com apoio de IA passa a levar um comentário na primeira linha com o caminho real dentro do repositório (ex: `// frontend/app/page.tsx`).
+
+**Porquê**: elimina ambiguidade na hora de colar o conteúdo entregue pela IA no lugar certo do projeto — sem essa convenção, cada arquivo exigia uma pergunta separada de "isso vai onde?".
+
+### 4.31 Sala única, seedada, com 40 assentos
+
+**Decisão**: uma única `Room` fixa ("Cinema Arcano — Sala 1"), criada via seed, com 40 assentos (`Seat`) organizados em grade (5 fileiras × 8 colunas, ex: A1–A8 até E1–E8). Todas as `Session` (filme + data/horário + preço, criadas pelo organizador) apontam para essa mesma sala.
+
+**Porquê**: o schema (seção 4.7) já modela `Room`/`Seat` como entidades separadas de `Session`, então essa é uma decisão de produto/seed, não uma limitação técnica — suporta múltiplas salas no futuro sem migration, se um dia fizer sentido. O PDF nunca exige múltiplos locais, só "data, local e preço" por evento; uma sala fixa satisfaz "local" de forma trivial e coerente com a identidade de um cinema específico (não uma rede). 40 assentos é grande o bastante pra parecer um mapa real e pequeno o bastante pra caber numa tela sem virar problema de scroll/UI.
+
+### 4.32 Comportamento do módulo Salas/Sessões
+
+**Decisões**, definidas antes de iniciar a implementação:
+
+- **Criação de sessão pelo organizador**: tela própria (`/admin/sessions/new` ou similar — nome exato a definir na implementação), com busca de filme dedicada (reaproveitando `searchMovies`/`getMovies` do serviço já existente em `api.ts`), em vez de um botão "Criar sessão" embutido na Home pública do Catálogo. Mantém a área do organizador separada da navegação do cliente.
+- **Conflito de horário**: bloqueado. Como só existe uma sala (seção 4.31), duas sessões não podem se sobrepor nela — a criação de uma nova sessão precisa validar contra o intervalo (`início` até `início + duração do filme`) das sessões já existentes na mesma sala e rejeitar em caso de sobreposição.
+- **Visibilidade de sessões**: só sessões futuras aparecem para o cliente (`GET` público de sessões de um filme filtra `dataHora >= now`). Sessões passadas não ficam visíveis nem reserváveis nessa consulta — não há tela de histórico no escopo atual.
+
+**Porquê**: separar a área do organizador evita misturar fluxo de gestão com navegação pública (coerente com os 3 papéis distintos do desafio). Bloquear conflito de horário é a única forma de a sala única (4.31) fazer sentido operacional — sem essa validação, o sistema permitiria vender ingresso pra duas sessões impossíveis de acontecer ao mesmo tempo na mesma sala física. Esconder sessões passadas evita o cliente tentar reservar algo que já aconteceu, sem precisar de uma tela de histórico que não está no escopo do desafio.
+
+### 4.33 Uso do enum `SessionStatus`
+
+**Decisão**: o enum `SessionStatus` (`SCHEDULED`/`CANCELLED`/`FINISHED`), já presente no `schema.prisma` mas até então sem decisão registrada, vai ser usado com escopo mínimo: apenas `SCHEDULED` e `CANCELLED` são gravados/gerenciados ativamente pela aplicação. `FINISHED` não é escrito no banco por nenhum job/cron — é só um estado calculado on-the-fly na consulta (`startTime + duração <= now`), nunca persistido.
+
+- Organizador pode cancelar uma sessão já publicada (`status = CANCELLED`), em vez de deletar a linha — preserva histórico de `Reservation`/`ReservationSeat` já ligados a ela.
+- A validação de conflito de horário (seção 4.32) precisa ignorar sessões com `status = CANCELLED` ao checar sobreposição — uma sessão cancelada libera o horário na sala para uma nova sessão.
+
+**Porquê**: sem `CANCELLED`, a decisão de bloquear conflito de horário (4.32) fica incompleta — não haveria como reabrir um horário depois de cancelar uma sessão sem deletar a linha e arriscar quebrar `Reservation`/`ReservationSeat`. `FINISHED` como campo calculado evita a necessidade de um job periódico atualizando status no banco, o que seria desproporcional ao escopo do desafio (mesmo racional já usado pra evitar infra desnecessária, ver seção 2 do contexto de sessão). Alternativa considerada e descartada: remover o enum do schema por ser "campo não usado" — descartada porque cancelamento de sessão é um caso real que vale a pena cobrir dado o baixo custo de implementação.
 
 - **Prazo**: 7 dias corridos a partir do recebimento do e-mail
 - **README**: detalhado, com passo a passo de setup, incluindo configuração do banco escolhido; qualquer coisa que não funcione como esperado deve ser mencionada
@@ -396,8 +447,12 @@ Estilo visual: **neo-brutalismo** — sem `border-radius`, bordas sólidas de 2p
 - [x] ~~Validar `RolesGuard` com usuários reais~~ — feito, ver seção 4.18 (ADMIN 200, CUSTOMER/GATE 403)
 - [x] ~~Implementar frontend de Auth (login, cadastro)~~ — feito, ver seções 4.20 a 4.24
 - [x] ~~Estratégia de pós-login: redirecionamento após login e forma das demais páginas saberem que o usuário está autenticado~~ — feito, Context API, ver seção 4.25
+- [x] ~~Iniciar módulo Catálogo (integração TMDb) — backend e frontend~~ — feito, ver seções 4.26 a 4.30
+- [x] ~~Definir quantidade de salas e tamanho do mapa de assentos~~ — feito, ver seção 4.31 (sala única, 40 assentos)
+- [x] ~~Definir uso do enum `SessionStatus`~~ — feito, ver seção 4.33 (escopo mínimo: `SCHEDULED`/`CANCELLED` geridos pela aplicação, `FINISHED` calculado, sem persistir)
 - [ ] Limpeza opcional: remover boilerplate morto do `globals.css` (`:root`, `@theme inline`, `@media prefers-color-scheme`, sobras do `create-next-app` não usadas pelo tema Cinema Arcano)
-- [ ] Iniciar módulo Catálogo (integração TMDb) — backend e frontend
+- [ ] Rodar migration (se ainda não aplicada) e escrever seed de `Room`/`Seat` (sala única, 40 assentos)
+- [ ] Iniciar módulo de Salas/Assentos/Sessões
 
 ---
 
@@ -412,4 +467,7 @@ Estilo visual: **neo-brutalismo** — sem `border-radius`, bordas sólidas de 2p
 | 20/08/2026 | Provedor de hospedagem gerenciada definido: Render, free tier, para backend + PostgreSQL. Trade-off de cold start documentado e aceito, priorizando durabilidade do projeto para portfólio. Fluxo de desenvolvimento definido como intercalado (backend → frontend por módulo). Plano dia-a-dia fechado para os 5 dias restantes do prazo. |
 | 20/08/2026 | Módulo Auth implementado e testado por completo: `AuthService`/`AuthController` (register + login), `PrismaService`/`PrismaModule` (global), `JwtAuthGuard` e `RolesGuard` (sem Passport), `GET /auth/me`, e `prisma/seed.ts` (1 ADMIN, 2 CUSTOMERs, 1 GATE, senhas Argon2id). Decisões documentadas: registro sempre como CUSTOMER via API (4.14), commit único por módulo funcional (4.15), PrismaModule global (4.16), guard própria sem Passport (4.17). `RolesGuard` validada com os 4 usuários reais do seed (4.18). `/auth/me` liberado para qualquer papel autenticado, sem restrição por role (4.19). |
 | 20/08/2026 | Frontend do módulo Auth implementado e commitado: identidade visual do Cinema Arcano fechada (paleta amarelo/roxo/preto, neo-brutalismo — 4.12); roteamento via App Router e formulários com `react-hook-form` + `zod` (4.20); páginas de login e cadastro consumindo a API via serviço centralizado `api.ts`, com tratamento de erro lendo a mensagem real do backend (4.21); token salvo em `localStorage`, trade-off de XSS documentado, persistência/redirecionamento pós-login ainda pendente (4.22); escopo "esqueci a senha" confirmado descartado, sem nenhum elemento de UI residual (4.23); acessibilidade básica de formulários com `htmlFor`/`id` em todos os labels (4.24). |
-| 20/08/2026 | Estratégia de pós-login implementada: `AuthContext`/`AuthProvider` (Context API nativa, sem Zustand) criado em `app/context/AuthContext.tsx` e envolvendo a aplicação em `layout.tsx`; lê `localStorage` ao montar, expõe `user`/`token`/`login`/`logout`. `login/page.tsx` passou a buscar o usuário via `GET /auth/me` após o login e redirecionar para `/`; `api.ts` ganhou a função `getMe`. Decisão documentada (4.25). |
+| 20/08/2026 | Estratégia de pós-login implementada: `AuthContext`/`AuthProvider` (Context API nativa, sem Zustand) criado em `app/context/AuthContext.tsx` e envolvendo a aplicação em `layout.tsx`; lê `localStorage` ao montar, expõe `user`/`token`/`login`/`logout`. `login/page.tsx` passou a buscar o usuário via `GET /auth/me` após o login e redirecionar para `/`; `api.ts` ganhou a função `getMe`. Decisão documentada (4.25). Módulo Auth fica **100% completo, backend e frontend, commitado**. |
+| 20/08/2026 | Backend do módulo Catálogo implementado, testado ponta a ponta via `Invoke-RestMethod` e commitado: `MoviesModule`/`MoviesController`/`MoviesService`, proxy do TMDb com resposta mapeada, rotas públicas `GET /movies`, `GET /movies/search?query=`, `GET /movies/:id` (4.26). |
+| 21/08/2026 | Frontend do módulo Catálogo implementado a partir da leitura direta dos arquivos reais do projeto: Home com populares e busca, página de detalhes como server component, três novas funções em `api.ts` (4.27). Pôsteres via `next/image` com `remotePatterns` liberando `image.tmdb.org` (4.28). Testes manuais no navegador revelaram e corrigiram dois bugs: CORS ausente no backend, bloqueando as chamadas do frontend (4.29), e `Image` com `fill` vazando pela página de detalhes por falta de `position: relative` no elemento pai. Nova convenção fechada: caminho do arquivo como comentário na primeira linha em toda entrega de IA (4.30). Módulo Catálogo (frontend) commitado em dois commits separados: `feat(catalog)` e `fix(backend)` do CORS. Módulo Catálogo fica **100% completo, backend e frontend, commitado**. |
+| 21/08/2026 | `schema.prisma` conferido contra todas as decisões do módulo Salas/Sessões (4.31/4.32) — sem inconsistência, sem migration de estrutura pendente. Enum `SessionStatus` (`SCHEDULED`/`CANCELLED`/`FINISHED`), presente no schema mas sem decisão registrada até então, decidido: escopo mínimo, só `SCHEDULED`/`CANCELLED` geridos pela aplicação (organizador pode cancelar sessão sem deletar a linha, e a validação de conflito de horário passa a ignorar sessões `CANCELLED`), `FINISHED` é só calculado na consulta, nunca persistido (4.33). Seed de `Room`/`Seat` ainda não escrita — pendente antes de iniciar o `SessionsModule`. |

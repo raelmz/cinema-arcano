@@ -1,3 +1,5 @@
+// backend/src/app.module.ts
+
 import { Module } from '@nestjs/common';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
@@ -5,6 +7,7 @@ import { PrismaModule } from './prisma/prisma.module';
 import { ConfigModule } from '@nestjs/config/dist/config.module';
 import { AuthModule } from './auth/auth.module';
 import { MoviesModule } from './movies/movies.module';
+import { SessionsModule } from './sessions/sessions.module';
 
 @Module({
   imports: [
@@ -14,6 +17,7 @@ import { MoviesModule } from './movies/movies.module';
     PrismaModule,
     AuthModule,
     MoviesModule,
+    SessionsModule,
   ],
   controllers: [AppController],
   providers: [AppService],

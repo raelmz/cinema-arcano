@@ -1,3 +1,5 @@
+// backend/src/auth/auth.module.ts
+
 import { Module } from '@nestjs/common';
 import { JwtModule } from '@nestjs/jwt';
 import { ConfigModule, ConfigService } from '@nestjs/config';
@@ -21,6 +23,10 @@ import { RolesGuard } from './guards/roles.guard';
   ],
   controllers: [AuthController],
   providers: [AuthService, JwtAuthGuard, RolesGuard],
-  exports: [JwtAuthGuard, RolesGuard],
+  // JwtModule também precisa ser exportado: JwtAuthGuard depende de
+  // JwtService, e outros módulos (ex.: SessionsModule) que importam
+  // AuthModule só pra usar as guards também precisam resolver essa
+  // dependência no próprio contexto de injeção deles.
+  exports: [JwtModule, JwtAuthGuard, RolesGuard],
 })
 export class AuthModule {}

@@ -90,9 +90,15 @@ export default function GatePage() {
   async function iniciarCamera() {
     try {
       const { Html5Qrcode } = await import('html5-qrcode');
+      const permissionStream = await navigator.mediaDevices.getUserMedia({
+        video: true,
+      });
+      permissionStream.getTracks().forEach((track) => track.stop());
+      setCameraAtiva(true);
+      await new Promise((resolve) => requestAnimationFrame(resolve));
+
       const scanner = new Html5Qrcode('leitor-qr-portaria', false);
       scannerRef.current = scanner;
-      setCameraAtiva(true);
       setErro('');
 
       await scanner.start(
@@ -104,8 +110,12 @@ export default function GatePage() {
         },
         undefined,
       );
-    } catch {
-      setErro('Não foi possível acessar a câmera. Use a digitação manual.');
+    } catch (error) {
+      const mensagem =
+        error instanceof Error && error.name === 'NotAllowedError'
+          ? 'Permissão da câmera bloqueada no navegador. Libere o acesso à câmera e tente novamente.'
+          : 'Não foi possível iniciar a câmera neste dispositivo. Use a digitação manual.';
+      setErro(mensagem);
       setCameraAtiva(false);
     }
   }
@@ -183,12 +193,12 @@ export default function GatePage() {
                 </Botao>
               </div>
 
-              {cameraAtiva && (
-                <div
-                  id="leitor-qr-portaria"
-                  className="overflow-hidden border-2 border-arcano-main bg-black"
-                />
-              )}
+              <div
+                id="leitor-qr-portaria"
+                className={`overflow-hidden border-2 border-arcano-main bg-black ${
+                  cameraAtiva ? 'block' : 'hidden'
+                }`}
+              />
             </div>
           </Cartao>
 

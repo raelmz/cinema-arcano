@@ -4,7 +4,7 @@
 
 **Última atualização**: 21/08/2026
 **Autor**: Israel Menezes de Andrade
-**Status**: Módulos Auth e Catálogo **completos, backend e frontend, ambos implementados, testados e commitados** — Módulo Salas/Sessões com decisões de design fechadas (4.31–4.33), schema conferido, implementação ainda não iniciada — demais módulos de aplicação (reserva, pagamento, ticket, portaria) ainda não iniciados
+**Status**: Módulos Auth e Catálogo **completos, backend e frontend, ambos implementados, testados e commitados**. Módulos Salas/Sessões e Reserva/Ingresso **concluídos no backend, testados manualmente e commitados**. Frontend de Salas/Sessões, frontend de Reserva/Ingresso e módulo de Portaria ainda pendentes.
 
 ---
 
@@ -75,11 +75,11 @@ Decidi dar identidade própria ao produto em vez de entregar um cinema genérico
 
 ### Back-End
 - [x] Integração com API externa de catálogo (ver decisão na seção 4.26)
-- [ ] Autenticação com os 3 papéis
-- [ ] Persistência de eventos, reservas e ingressos
-- [ ] Garantia de que o mesmo assento não seja vendido duas vezes (concorrência)
-- [ ] QR code não forjável (não pode ser um ID cru — precisa de assinatura/hash verificável)
-- [ ] Geração de link compartilhável do ingresso
+- [x] Autenticação com os 3 papéis
+- [x] Persistência de eventos, reservas e ingressos
+- [x] Garantia de que o mesmo assento não seja vendido duas vezes (concorrência)
+- [x] QR code não forjável (não pode ser um ID cru — precisa de assinatura/hash verificável)
+- [x] Geração de link compartilhável do ingresso
 - [ ] Validação de ingresso impedindo reuso
 
 ### Fora de escopo (explícito no desafio — não implementar)
@@ -424,6 +424,52 @@ Estilo visual: **neo-brutalismo** — sem `border-radius`, bordas sólidas de 2p
 
 **Porquê**: sem `CANCELLED`, a decisão de bloquear conflito de horário (4.32) fica incompleta — não haveria como reabrir um horário depois de cancelar uma sessão sem deletar a linha e arriscar quebrar `Reservation`/`ReservationSeat`. `FINISHED` como campo calculado evita a necessidade de um job periódico atualizando status no banco, o que seria desproporcional ao escopo do desafio (mesmo racional já usado pra evitar infra desnecessária, ver seção 2 do contexto de sessão). Alternativa considerada e descartada: remover o enum do schema por ser "campo não usado" — descartada porque cancelamento de sessão é um caso real que vale a pena cobrir dado o baixo custo de implementação.
 
+### 4.34 Implementação do `SessionsModule`
+
+**Decisão**: o backend de Salas/Sessões foi implementado como módulo próprio (`backend/src/sessions/`), com rotas `POST /sessions` (ADMIN), `GET /sessions` (pública), `GET /sessions/:id` (pública) e `PATCH /sessions/:id/cancel` (ADMIN). A criação de sessão resolve a sala única internamente, valida conflito de horário e persiste a sessão ligada ao organizador autenticado.
+
+**Porquê**: manter sessões em um módulo próprio separa a gestão de eventos da integração de catálogo. O catálogo (`MoviesModule`) continua sendo vitrine/proxy do TMDb; a sessão é a entidade local vendável, com preço, horário, sala e organizador.
+
+### 4.35 `roomId` implícito no `POST /sessions`
+
+**Decisão**: o `CreateSessionDto` não recebe `roomId`. O `SessionsService` busca a sala única existente no banco, criada pelo seed.
+
+**Porquê**: como a versão atual do produto tem uma sala fixa (4.31), expor `roomId` no corpo da requisição criaria uma escolha falsa para o organizador e aumentaria a chance de payload inválido. O schema continua preparado para múltiplas salas no futuro, mas a UI/API do MVP não precisa expor essa complexidade.
+
+### 4.36 Vínculo entre TMDb e `Movie` local
+
+**Decisão**: o `movieId` recebido em `POST /sessions` é tratado como `tmdbId`, porque as rotas públicas de catálogo expõem o id do TMDb. Na criação da sessão, o backend resolve ou cria o `Movie` local via `findOrCreateLocalMovie`, usando `upsert` por `tmdbId`.
+
+**Porquê**: antes dessa decisão, o backend tentaria buscar um `Movie.id` local que nunca existia, já que `GET /movies` é um proxy puro do TMDb e não grava filmes no banco. Criar o filme local sob demanda evita uma etapa manual de importação e preserva uma cópia estável dos dados usados nas sessões já publicadas.
+
+### 4.37 Fallback de duração da sessão
+
+**Decisão**: quando o TMDb não retorna duração (`durationMinutes` nulo), o backend usa fallback fixo de 120 minutos para calcular término da sessão.
+
+**Porquê**: conflito de horário e expiração de ticket dependem do horário de término. Sem fallback, uma sessão de filme sem runtime quebraria regras importantes do domínio. O fallback é explícito no código e não é persistido como dado real do filme.
+
+### 4.38 Reserva/Ingresso no backend
+
+**Decisão**: `ReservationsModule` implementado com criação de reserva, pagamento simulado e ticket público:
+
+- `POST /reservations`: CUSTOMER cria reserva `PENDING` para uma sessão e lista de assentos.
+- `POST /reservations/:id/pay`: CUSTOMER paga uma reserva própria pendente; o backend cria `Payment APPROVED`, confirma a reserva e gera um `Ticket`.
+- `GET /reservations/:id`: CUSTOMER consulta a própria reserva.
+- `GET /tickets/:id`: rota pública para exibir o ticket compartilhável.
+
+**Decisões de regra de negócio**:
+
+- Um ticket cobre a reserva inteira, não um ticket por assento.
+- Reserva `PENDING` expira em 1 hora.
+- A liberação de assento expirado acontece on-the-fly na tentativa de nova reserva, sem job/cron.
+- O QR/JWT do ticket contém `ticketId`, `reservationId` e `sessionId`, com `exp` no horário de término da sessão.
+
+**Porquê**: separar reserva e pagamento reflete melhor o fluxo real de compra (assentos travados primeiro, confirmação depois). A constraint `UNIQUE(sessionId, seatId)` continua sendo a garantia principal contra venda duplicada, e a aplicação traduz a colisão do Prisma em `409 Conflict`. A expiração on-the-fly evita infraestrutura extra e mantém o escopo proporcional ao desafio.
+
+---
+
+## 5. Requisitos de entrega
+
 - **Prazo**: 7 dias corridos a partir do recebimento do e-mail
 - **README**: detalhado, com passo a passo de setup, incluindo configuração do banco escolhido; qualquer coisa que não funcione como esperado deve ser mencionada
 - **Dados semeados (seed) obrigatórios**: 1 organizador, 2 clientes, 1 usuário de portaria, ao menos 1 evento publicado com ingressos disponíveis
@@ -450,9 +496,13 @@ Estilo visual: **neo-brutalismo** — sem `border-radius`, bordas sólidas de 2p
 - [x] ~~Iniciar módulo Catálogo (integração TMDb) — backend e frontend~~ — feito, ver seções 4.26 a 4.30
 - [x] ~~Definir quantidade de salas e tamanho do mapa de assentos~~ — feito, ver seção 4.31 (sala única, 40 assentos)
 - [x] ~~Definir uso do enum `SessionStatus`~~ — feito, ver seção 4.33 (escopo mínimo: `SCHEDULED`/`CANCELLED` geridos pela aplicação, `FINISHED` calculado, sem persistir)
+- [x] ~~Rodar migration (se ainda não aplicada) e escrever seed de `Room`/`Seat` (sala única, 40 assentos)~~ — feito, ver seção 4.31
+- [x] ~~Implementar módulo de Salas/Assentos/Sessões no backend~~ — feito, ver seções 4.34 a 4.37
+- [x] ~~Implementar módulo de Reserva/Ingresso no backend~~ — feito, ver seção 4.38
 - [ ] Limpeza opcional: remover boilerplate morto do `globals.css` (`:root`, `@theme inline`, `@media prefers-color-scheme`, sobras do `create-next-app` não usadas pelo tema Cinema Arcano)
-- [ ] Rodar migration (se ainda não aplicada) e escrever seed de `Room`/`Seat` (sala única, 40 assentos)
-- [ ] Iniciar módulo de Salas/Assentos/Sessões
+- [ ] Frontend de Salas/Sessões: tela do organizador para criar sessão e exibição de sessões futuras
+- [ ] Frontend de Reserva/Ingresso: mapa de assentos, pagamento simulado e tela pública do ticket
+- [ ] Módulo de Portaria: validação do QR, bloqueio de reuso e registro em `ValidationLog`
 
 ---
 
@@ -471,3 +521,4 @@ Estilo visual: **neo-brutalismo** — sem `border-radius`, bordas sólidas de 2p
 | 20/08/2026 | Backend do módulo Catálogo implementado, testado ponta a ponta via `Invoke-RestMethod` e commitado: `MoviesModule`/`MoviesController`/`MoviesService`, proxy do TMDb com resposta mapeada, rotas públicas `GET /movies`, `GET /movies/search?query=`, `GET /movies/:id` (4.26). |
 | 21/08/2026 | Frontend do módulo Catálogo implementado a partir da leitura direta dos arquivos reais do projeto: Home com populares e busca, página de detalhes como server component, três novas funções em `api.ts` (4.27). Pôsteres via `next/image` com `remotePatterns` liberando `image.tmdb.org` (4.28). Testes manuais no navegador revelaram e corrigiram dois bugs: CORS ausente no backend, bloqueando as chamadas do frontend (4.29), e `Image` com `fill` vazando pela página de detalhes por falta de `position: relative` no elemento pai. Nova convenção fechada: caminho do arquivo como comentário na primeira linha em toda entrega de IA (4.30). Módulo Catálogo (frontend) commitado em dois commits separados: `feat(catalog)` e `fix(backend)` do CORS. Módulo Catálogo fica **100% completo, backend e frontend, commitado**. |
 | 21/08/2026 | `schema.prisma` conferido contra todas as decisões do módulo Salas/Sessões (4.31/4.32) — sem inconsistência, sem migration de estrutura pendente. Enum `SessionStatus` (`SCHEDULED`/`CANCELLED`/`FINISHED`), presente no schema mas sem decisão registrada até então, decidido: escopo mínimo, só `SCHEDULED`/`CANCELLED` geridos pela aplicação (organizador pode cancelar sessão sem deletar a linha, e a validação de conflito de horário passa a ignorar sessões `CANCELLED`), `FINISHED` é só calculado na consulta, nunca persistido (4.33). Seed de `Room`/`Seat` ainda não escrita — pendente antes de iniciar o `SessionsModule`. |
+| 21/08/2026 | Backend de Salas/Sessões concluído e commitado: seed de sala/assentos, `SessionsModule`, conflito de horário, cancelamento, status `FINISHED` calculado, `roomId` implícito, fallback de 120 minutos e vínculo entre TMDb e `Movie` local via upsert (4.34 a 4.37). Backend de Reserva/Ingresso concluído e commitado: `ReservationsModule`, reserva `PENDING`, pagamento simulado, ticket público, QR/JWT com expiração no fim da sessão, liberação on-the-fly de reservas expiradas e teste manual completo (4.38). |

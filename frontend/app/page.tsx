@@ -2,9 +2,11 @@
 'use client';
 
 import { useEffect, useState, FormEvent } from 'react';
-import Link from 'next/link';
-import Image from 'next/image';
 import { getMovies, searchMovies, Movie } from './services/api';
+import { Botao } from './components/ui/Botao';
+import { Container } from './components/ui/Container';
+import { CartaoFilme } from './components/movies/CartaoFilme';
+import { Aviso } from './components/ui/Aviso';
 
 export default function Home() {
   const [movies, setMovies] = useState<Movie[]>([]);
@@ -61,33 +63,31 @@ export default function Home() {
 
   return (
     <div className="flex flex-1 flex-col bg-arcano-bg">
-      <header className="border-b border-white/10 px-6 py-8 sm:px-12">
-        <h1 className="text-3xl font-bold tracking-tight text-arcano-main sm:text-4xl">
-          Cinema Arcano
-        </h1>
-        <p className="mt-1 text-sm text-white/50">
-          Sessões e ingressos para os filmes em cartaz
-        </p>
+      <Container className="py-8">
+        <section className="mb-8 border-b-2 border-white/10 pb-6">
+          <h1 className="text-3xl font-black uppercase tracking-wide text-arcano-main sm:text-4xl">
+            Filmes em cartaz
+          </h1>
+          <p className="mt-2 max-w-2xl text-sm text-white/55">
+            Escolha um filme, veja as sessões disponíveis e reserve seu lugar no
+            mapa da sala.
+          </p>
 
-        <form onSubmit={handleSearch} className="mt-6 flex max-w-md gap-2">
+          <form onSubmit={handleSearch} className="mt-6 flex max-w-xl gap-2">
           <input
             type="text"
             value={query}
             onChange={(e) => setQuery(e.target.value)}
             placeholder="Buscar filme..."
             aria-label="Buscar filme"
-            className="flex-1 rounded-md border border-white/10 bg-arcano-surface px-4 py-2 text-sm text-white placeholder:text-white/30 focus:border-arcano-main focus:outline-none"
+            className="min-w-0 flex-1 border-2 border-white/10 bg-arcano-surface px-4 py-3 text-sm text-white placeholder:text-white/30 focus:border-arcano-main focus:outline-none"
           />
-          <button
-            type="submit"
-            className="rounded-md bg-arcano-main px-4 py-2 text-sm font-semibold text-arcano-bg transition-colors hover:bg-arcano-ter"
-          >
+          <Botao type="submit" className="shrink-0">
             Buscar
-          </button>
+          </Botao>
         </form>
-      </header>
+        </section>
 
-      <main className="flex-1 px-6 py-8 sm:px-12">
         {activeQuery && !isLoading && (
           <p className="mb-4 text-sm text-white/50">
             Resultados para &ldquo;{activeQuery}&rdquo;{' '}
@@ -102,7 +102,7 @@ export default function Home() {
 
         {isLoading && <p className="text-white/50">Carregando...</p>}
 
-        {!isLoading && error && <p className="text-red-400">{error}</p>}
+        {!isLoading && error && <Aviso tipo="erro">{error}</Aviso>}
 
         {!isLoading && !error && movies.length === 0 && (
           <p className="text-white/50">Nenhum filme encontrado.</p>
@@ -111,40 +111,11 @@ export default function Home() {
         {!isLoading && !error && movies.length > 0 && (
           <div className="grid grid-cols-2 gap-5 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5">
             {movies.map((movie) => (
-              <Link
-                key={movie.id}
-                href={`/movies/${movie.id}`}
-                className="group flex flex-col overflow-hidden rounded-lg bg-arcano-surface transition-transform hover:-translate-y-1"
-              >
-                <div className="relative aspect-[2/3] w-full bg-black/30">
-                  {movie.posterUrl ? (
-                    <Image
-                      src={movie.posterUrl}
-                      alt={movie.title}
-                      fill
-                      sizes="(max-width: 640px) 50vw, (max-width: 1024px) 25vw, 20vw"
-                      className="object-cover"
-                    />
-                  ) : (
-                    <div className="flex h-full items-center justify-center px-2 text-center text-xs text-white/30">
-                      Sem pôster
-                    </div>
-                  )}
-                </div>
-                <div className="p-3">
-                  <h2 className="line-clamp-2 text-sm font-medium text-white group-hover:text-arcano-main">
-                    {movie.title}
-                  </h2>
-                  <p className="mt-1 text-xs text-white/40">
-                    {movie.releaseDate ? movie.releaseDate.slice(0, 4) : '—'} · ⭐{' '}
-                    {movie.voteAverage.toFixed(1)}
-                  </p>
-                </div>
-              </Link>
+              <CartaoFilme key={movie.id} filme={movie} />
             ))}
           </div>
         )}
-      </main>
+      </Container>
     </div>
   );
 }

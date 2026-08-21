@@ -2,7 +2,9 @@
 import Link from 'next/link';
 import Image from 'next/image';
 import { notFound } from 'next/navigation';
-import { getMovieDetails } from '../../services/api';
+import { getMovieDetails, getSessions } from '../../services/api';
+import { Container } from '../../components/ui/Container';
+import { Cartao } from '../../components/ui/Cartao';
 
 type MovieDetailsPageProps = {
   params: Promise<{ id: string }>;
@@ -13,25 +15,31 @@ export default async function MovieDetailsPage({
 }: MovieDetailsPageProps) {
   const { id } = await params;
 
-  const movie = await getMovieDetails(id).catch((err: unknown) => {
+  const [movie, sessions] = await Promise.all([
+    getMovieDetails(id).catch((err: unknown) => {
     // Backend devolve 404 quando o filme não existe no TMDb
     if (err instanceof Error && err.message === 'Filme não encontrado.') {
       notFound();
     }
     throw err;
-  });
+    }),
+    getSessions().catch(() => []),
+  ]);
+  const sessoesDoFilme = sessions.filter(
+    (session) => String(session.movie.tmdbId) === id,
+  );
 
   return (
     <div className="flex flex-1 flex-col bg-arcano-bg">
-      <div className="px-6 py-6 sm:px-12">
+      <Container className="py-6">
         <Link href="/" className="text-sm text-white/50 hover:text-arcano-main">
           ← Voltar
         </Link>
-      </div>
+      </Container>
 
-      <main className="flex flex-1 flex-col gap-8 px-6 pb-12 sm:flex-row sm:px-12">
+      <Container className="grid flex-1 gap-8 pb-12 lg:grid-cols-[320px_1fr]">
         <div className="mx-auto w-full max-w-xs shrink-0 sm:mx-0">
-          <div className="relative aspect-[2/3] w-full overflow-hidden rounded-lg bg-arcano-surface">
+          <Cartao className="relative aspect-[2/3] w-full overflow-hidden">
             {movie.posterUrl ? (
               <Image
                 src={movie.posterUrl}
@@ -46,10 +54,10 @@ export default async function MovieDetailsPage({
                 Sem pôster
               </div>
             )}
-          </div>
+          </Cartao>
         </div>
 
-        <div className="flex-1">
+        <div>
           <h1 className="text-2xl font-bold text-white sm:text-3xl">
             {movie.title}
           </h1>
@@ -84,8 +92,44 @@ export default async function MovieDetailsPage({
           <p className="mt-6 max-w-2xl leading-relaxed text-white/80">
             {movie.overview || 'Sinopse não disponível.'}
           </p>
+
+          <section className="mt-8">
+            <h2 className="mb-4 text-xl font-black uppercase tracking-wide text-arcano-main">
+              Sessões disponíveis
+            </h2>
+
+            {sessoesDoFilme.length === 0 ? (
+              <Cartao className="p-4">
+                <p className="text-sm text-white/50">
+                  Nenhuma sessão futura publicada para este filme.
+                </p>
+              </Cartao>
+            ) : (
+              <div className="grid gap-3 sm:grid-cols-2">
+                {sessoesDoFilme.map((sessao) => (
+                  <Cartao key={sessao.id} className="p-4">
+                    <p className="text-sm font-bold text-white">
+                      {new Intl.DateTimeFormat('pt-BR', {
+                        dateStyle: 'short',
+                        timeStyle: 'short',
+                      }).format(new Date(sessao.startTime))}
+                    </p>
+                    <p className="mt-1 text-xs text-white/50">
+                      {sessao.room.name}
+                    </p>
+                    <p className="mt-3 text-lg font-black text-arcano-main">
+                      {new Intl.NumberFormat('pt-BR', {
+                        style: 'currency',
+                        currency: 'BRL',
+                      }).format(Number(sessao.price))}
+                    </p>
+                  </Cartao>
+                ))}
+              </div>
+            )}
+          </section>
         </div>
-      </main>
+      </Container>
     </div>
   );
 }

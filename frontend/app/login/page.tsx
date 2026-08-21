@@ -8,6 +8,11 @@ import { login as loginRequest, getMe } from '../services/api';
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '../context/AuthContext';
+import Link from 'next/link';
+import { Aviso } from '../components/ui/Aviso';
+import { Botao } from '../components/ui/Botao';
+import { CampoTexto } from '../components/ui/CampoTexto';
+import { Cartao } from '../components/ui/Cartao';
 
 // Validação do Zod
 const loginSchema = z.object({
@@ -21,7 +26,11 @@ export default function LoginPage() {
   const [error, setError] = useState('');
   const { login } = useAuth();
   const router = useRouter();
-  const { register, handleSubmit, formState: { errors, isSubmitting } } = useForm<LoginForm>({
+  const {
+    register,
+    handleSubmit,
+    formState: { errors, isSubmitting },
+  } = useForm<LoginForm>({
     resolver: zodResolver(loginSchema),
   });
 
@@ -33,67 +42,56 @@ export default function LoginPage() {
 
       login(result.accessToken, user);
       router.push('/');
-    } catch (err: any) {
-      setError(err.message);
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : 'Erro ao fazer login.');
     }
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center p-4">
-      <div className="w-full max-w-md bg-arcano-surface p-8 border-2 border-arcano-main rounded-none shadow-[8px_8px_0px_0px_rgba(255,213,79,1)]">
-        
+    <div className="flex flex-1 items-center justify-center p-4">
+      <Cartao destaque className="w-full max-w-md p-8">
         <h1 className="text-3xl font-bold mb-6 text-arcano-main uppercase tracking-widest border-b-2 border-arcano-sec pb-2">
           Acesso Arcano
         </h1>
 
         {error && (
-          <div className="bg-red-900/50 border-2 border-red-500 text-red-200 p-3 mb-6 font-mono text-sm">
-            {error}
+          <div className="mb-6">
+            <Aviso tipo="erro">{error}</Aviso>
           </div>
         )}
 
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
-          <div>
-            <label htmlFor="email" className="block text-sm font-bold text-arcano-ter mb-2 uppercase tracking-wide">
-              E-mail
-            </label>
-            <input
-              {...register('email')}
-              id="email"
-              type="email"
-              className="w-full bg-arcano-bg border-2 border-gray-700 text-white p-3 rounded-none focus:outline-none focus:border-arcano-main transition-colors"
-            />
-            {errors.email && <span className="text-red-400 text-xs mt-1 block">{errors.email.message}</span>}
-          </div>
+          <CampoTexto
+            {...register('email')}
+            id="email"
+            type="email"
+            label="E-mail"
+            erro={errors.email?.message}
+          />
 
-          <div>
-            <label htmlFor="password" className="block text-sm font-bold text-arcano-ter mb-2 uppercase tracking-wide">
-              Senha
-            </label>
-            <input
-              {...register('password')}
-              id="password"
-              type="password"
-              className="w-full bg-arcano-bg border-2 border-gray-700 text-white p-3 rounded-none focus:outline-none focus:border-arcano-main transition-colors"
-            />
-            {errors.password && <span className="text-red-400 text-xs mt-1 block">{errors.password.message}</span>}
-          </div>
+          <CampoTexto
+            {...register('password')}
+            id="password"
+            type="password"
+            label="Senha"
+            erro={errors.password?.message}
+          />
 
-          <button
+          <Botao
             type="submit"
             disabled={isSubmitting}
-            className="w-full bg-arcano-sec hover:bg-arcano-main text-white hover:text-arcano-bg font-bold py-4 px-4 rounded-none border-2 border-transparent hover:border-black transition-all uppercase tracking-widest disabled:opacity-50"
+            variante="secundario"
+            className="w-full py-4"
           >
             {isSubmitting ? 'Verificando...' : 'Entrar'}
-          </button>
+          </Botao>
           <div className="flex flex-col space-y-4 mt-6 text-center text-sm font-mono">
-            <a href="/register" className="text-arcano-main hover:text-arcano-ter hover:underline uppercase transition-colors">
+            <Link href="/register" className="text-arcano-main hover:text-arcano-ter hover:underline uppercase transition-colors">
               [ Criar uma nova conta ]
-            </a>
+            </Link>
           </div>
         </form>
-
-      </div>
+      </Cartao>
     </div>
   );
 }

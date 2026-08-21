@@ -4,6 +4,7 @@
 import Link from 'next/link';
 import { useParams, useRouter } from 'next/navigation';
 import { useEffect, useMemo, useState } from 'react';
+import { AcessoRestrito } from '../../../components/ui/AcessoRestrito';
 import { Aviso } from '../../../components/ui/Aviso';
 import { Botao } from '../../../components/ui/Botao';
 import { CampoTexto } from '../../../components/ui/CampoTexto';
@@ -45,12 +46,6 @@ export default function PaymentPage() {
   const [processando, setProcessando] = useState(false);
   const [erro, setErro] = useState('');
   const [recusado, setRecusado] = useState(false);
-
-  useEffect(() => {
-    if (!isLoading && user?.role !== 'CUSTOMER') {
-      router.push('/');
-    }
-  }, [isLoading, router, user]);
 
   useEffect(() => {
     async function carregarReserva() {
@@ -108,10 +103,15 @@ export default function PaymentPage() {
   }
 
   if (isLoading || user?.role !== 'CUSTOMER') {
-    return (
+    return isLoading ? (
       <Container className="py-10">
         <p className="text-white/50">Verificando acesso...</p>
       </Container>
+    ) : (
+      <AcessoRestrito
+        titulo="Checkout protegido"
+        mensagem="Entre com uma conta de cliente para concluir o pagamento desta reserva."
+      />
     );
   }
 

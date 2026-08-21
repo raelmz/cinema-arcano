@@ -2,8 +2,8 @@
 'use client';
 
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
 import { useEffect, useMemo, useState } from 'react';
+import { AcessoRestrito } from '../../components/ui/AcessoRestrito';
 import { Aviso } from '../../components/ui/Aviso';
 import { Botao } from '../../components/ui/Botao';
 import { Cartao } from '../../components/ui/Cartao';
@@ -36,19 +36,12 @@ function formatarMoeda(valor: string) {
 }
 
 export default function AdminSessionsPage() {
-  const router = useRouter();
   const { user, token, isLoading } = useAuth();
   const [sessoes, setSessoes] = useState<SessaoAdministrativa[]>([]);
   const [carregando, setCarregando] = useState(true);
   const [cancelandoId, setCancelandoId] = useState('');
   const [erro, setErro] = useState('');
   const [sucesso, setSucesso] = useState('');
-
-  useEffect(() => {
-    if (!isLoading && user?.role !== 'ADMIN') {
-      router.push('/');
-    }
-  }, [isLoading, router, user]);
 
   async function carregarSessoes() {
     if (!token) return;
@@ -117,10 +110,15 @@ export default function AdminSessionsPage() {
   );
 
   if (isLoading || user?.role !== 'ADMIN') {
-    return (
+    return isLoading ? (
       <Container className="py-10">
         <p className="text-white/50">Verificando acesso...</p>
       </Container>
+    ) : (
+      <AcessoRestrito
+        titulo="Painel do organizador"
+        mensagem="Entre com uma conta de organizador para listar e cancelar sessões."
+      />
     );
   }
 

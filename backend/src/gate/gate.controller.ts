@@ -13,7 +13,7 @@ export class GateController {
 
   @Post('validate')
   @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles('GATE')
+  @Roles('GATE', 'ADMIN')
   validate(@Body() dto: ValidateTicketDto, @Req() req) {
     return this.gateService.validate(dto, req.user.sub);
   }

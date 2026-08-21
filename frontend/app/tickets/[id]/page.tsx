@@ -16,6 +16,7 @@ export default function TicketPage() {
   const [qrCodeUrl, setQrCodeUrl] = useState('');
   const [carregando, setCarregando] = useState(true);
   const [erro, setErro] = useState('');
+  const [copiado, setCopiado] = useState(false);
 
   useEffect(() => {
     async function carregarIngresso() {
@@ -45,6 +46,14 @@ export default function TicketPage() {
 
     carregarIngresso();
   }, [params.id]);
+
+  async function copiarToken() {
+    if (!ingresso) return;
+
+    await navigator.clipboard.writeText(ingresso.qrToken);
+    setCopiado(true);
+    window.setTimeout(() => setCopiado(false), 2000);
+  }
 
   return (
     <Container className="py-8">
@@ -83,6 +92,22 @@ export default function TicketPage() {
             <p className="mt-4 break-all font-mono text-xs text-white/35">
               {ingresso.id}
             </p>
+
+            <div className="mt-5 border-2 border-white/10 p-3">
+              <p className="font-mono text-xs uppercase tracking-wide text-white/40">
+                Token para validação manual
+              </p>
+              <p className="mt-2 max-h-28 overflow-y-auto break-all font-mono text-[11px] text-white/55">
+                {ingresso.qrToken}
+              </p>
+              <button
+                type="button"
+                onClick={copiarToken}
+                className="mt-3 w-full border-2 border-arcano-main bg-arcano-main px-3 py-2 text-xs font-bold uppercase tracking-wide text-arcano-bg hover:bg-arcano-ter"
+              >
+                {copiado ? 'Token copiado' : 'Copiar token'}
+              </button>
+            </div>
           </Cartao>
 
           <Cartao className="p-6">
@@ -135,7 +160,8 @@ export default function TicketPage() {
 
             <div className="mt-6">
               <Aviso tipo="info">
-                Apresente este QR code na portaria. O link é compartilhável.
+                Apresente este QR code na portaria. Se a câmera não estiver
+                disponível, copie o token e cole na validação manual.
               </Aviso>
             </div>
           </Cartao>

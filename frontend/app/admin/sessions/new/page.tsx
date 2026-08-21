@@ -3,7 +3,6 @@
 
 import { FormEvent, useEffect, useState } from 'react';
 import Image from 'next/image';
-import { useRouter } from 'next/navigation';
 import { useAuth } from '../../../context/AuthContext';
 import {
   createSession,
@@ -13,6 +12,7 @@ import {
   Sessao,
 } from '../../../services/api';
 import { Aviso } from '../../../components/ui/Aviso';
+import { AcessoRestrito } from '../../../components/ui/AcessoRestrito';
 import { Botao } from '../../../components/ui/Botao';
 import { CampoTexto } from '../../../components/ui/CampoTexto';
 import { Cartao } from '../../../components/ui/Cartao';
@@ -20,7 +20,6 @@ import { Container } from '../../../components/ui/Container';
 
 export default function NovaSessaoPage() {
   const { user, token, isLoading } = useAuth();
-  const router = useRouter();
   const [filmes, setFilmes] = useState<Movie[]>([]);
   const [filmeSelecionado, setFilmeSelecionado] = useState<Movie | null>(null);
   const [busca, setBusca] = useState('');
@@ -30,12 +29,6 @@ export default function NovaSessaoPage() {
   const [salvando, setSalvando] = useState(false);
   const [erro, setErro] = useState('');
   const [sucesso, setSucesso] = useState<Sessao | null>(null);
-
-  useEffect(() => {
-    if (!isLoading && user?.role !== 'ADMIN') {
-      router.push('/');
-    }
-  }, [isLoading, router, user]);
 
   useEffect(() => {
     carregarPopulares();
@@ -125,10 +118,15 @@ export default function NovaSessaoPage() {
   }
 
   if (isLoading || user?.role !== 'ADMIN') {
-    return (
+    return isLoading ? (
       <Container className="py-10">
         <p className="text-white/50">Verificando acesso...</p>
       </Container>
+    ) : (
+      <AcessoRestrito
+        titulo="Criação de sessão"
+        mensagem="Entre com uma conta de organizador para publicar novas sessões."
+      />
     );
   }
 

@@ -2,8 +2,8 @@
 'use client';
 
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
+import { AcessoRestrito } from '../components/ui/AcessoRestrito';
 import { Aviso } from '../components/ui/Aviso';
 import { Cartao } from '../components/ui/Cartao';
 import { Container } from '../components/ui/Container';
@@ -35,17 +35,10 @@ function calcularTotal(reserva: Reserva) {
 }
 
 export default function ReservationsPage() {
-  const router = useRouter();
   const { user, token, isLoading } = useAuth();
   const [reservas, setReservas] = useState<Reserva[]>([]);
   const [carregando, setCarregando] = useState(true);
   const [erro, setErro] = useState('');
-
-  useEffect(() => {
-    if (!isLoading && user?.role !== 'CUSTOMER') {
-      router.push('/');
-    }
-  }, [isLoading, router, user]);
 
   async function carregarReservas() {
     if (!token) return;
@@ -77,10 +70,15 @@ export default function ReservationsPage() {
   }, [token, user]);
 
   if (isLoading || user?.role !== 'CUSTOMER') {
-    return (
+    return isLoading ? (
       <Container className="py-10">
         <p className="text-white/50">Verificando acesso...</p>
       </Container>
+    ) : (
+      <AcessoRestrito
+        titulo="Ingressos protegidos"
+        mensagem="Entre com uma conta de cliente para ver reservas e tickets."
+      />
     );
   }
 

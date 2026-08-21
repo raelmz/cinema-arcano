@@ -2,6 +2,7 @@
 'use client';
 
 import { useEffect, useRef, useState } from 'react';
+import { AcessoRestrito } from '../components/ui/AcessoRestrito';
 import { Aviso } from '../components/ui/Aviso';
 import { Botao } from '../components/ui/Botao';
 import { CampoTexto } from '../components/ui/CampoTexto';
@@ -9,20 +10,6 @@ import { Cartao } from '../components/ui/Cartao';
 import { Container } from '../components/ui/Container';
 import { useAuth } from '../context/AuthContext';
 import { type ValidacaoPortaria, validateTicket } from '../services/api';
-
-type CodigoDetectado = {
-  rawValue: string;
-};
-
-type BarcodeDetectorConstructor = new (options?: {
-  formats?: string[];
-}) => {
-  detect: (image: HTMLVideoElement) => Promise<CodigoDetectado[]>;
-};
-
-type WindowComBarcodeDetector = Window & {
-  BarcodeDetector?: BarcodeDetectorConstructor;
-};
 
 const textosResultado = {
   VALID: {
@@ -53,9 +40,7 @@ function formatarAssentos(resultado: ValidacaoPortaria) {
 
 export default function GatePage() {
   const { token, user } = useAuth();
-  const videoRef = useRef<HTMLVideoElement | null>(null);
-  const streamRef = useRef<MediaStream | null>(null);
-  const lendoCameraRef = useRef(false);
+  const scannerRef = useRef<import('html5-qrcode').Html5Qrcode | null>(null);
   const [qrToken, setQrToken] = useState('');
   const [sessionId, setSessionId] = useState('');
   const [resultado, setResultado] = useState<ValidacaoPortaria | null>(null);
@@ -64,7 +49,9 @@ export default function GatePage() {
   const [cameraAtiva, setCameraAtiva] = useState(false);
 
   useEffect(() => {
-    return () => pararCamera();
+    return () => {
+      pararCamera();
+    };
   }, []);
 
   async function validar(tokenLido = qrToken) {
@@ -73,8 +60,8 @@ export default function GatePage() {
       return;
     }
 
-    if (user.role !== 'GATE') {
-      setErro('Apenas usuários de portaria podem validar ingressos.');
+    if (user.role !== 'GATE' && user.role !== 'ADMIN') {
+      setErro('Apenas usuários de portaria ou administrador podem validar ingressos.');
       return;
     }
 
@@ -101,59 +88,47 @@ export default function GatePage() {
   }
 
   async function iniciarCamera() {
-    const janela = window as WindowComBarcodeDetector;
-
-    if (!janela.BarcodeDetector) {
-      setErro('Este navegador não suporta leitura automática de QR. Use a digitação manual.');
-      return;
-    }
-
     try {
-      const stream = await navigator.mediaDevices.getUserMedia({
-        video: { facingMode: 'environment' },
-      });
-
-      streamRef.current = stream;
+      const { Html5Qrcode } = await import('html5-qrcode');
+      const scanner = new Html5Qrcode('leitor-qr-portaria', false);
+      scannerRef.current = scanner;
       setCameraAtiva(true);
+      setErro('');
 
-      if (videoRef.current) {
-        videoRef.current.srcObject = stream;
-        await videoRef.current.play();
-      }
-
-      lendoCameraRef.current = true;
-      lerCamera(janela.BarcodeDetector);
+      await scanner.start(
+        { facingMode: 'environment' },
+        { fps: 10, qrbox: { width: 260, height: 260 } },
+        async (decodedText) => {
+          await pararCamera();
+          await validar(decodedText);
+        },
+        undefined,
+      );
     } catch {
       setErro('Não foi possível acessar a câmera. Use a digitação manual.');
       setCameraAtiva(false);
     }
   }
 
-  async function lerCamera(BarcodeDetector: BarcodeDetectorConstructor) {
-    const detector = new BarcodeDetector({ formats: ['qr_code'] });
-
-    while (lendoCameraRef.current && videoRef.current) {
-      const codigos = await detector.detect(videoRef.current).catch(() => []);
-      const codigo = codigos[0]?.rawValue;
-
-      if (codigo) {
-        pararCamera();
-        await validar(codigo);
-        return;
-      }
-
-      await new Promise((resolve) => setTimeout(resolve, 500));
+  async function pararCamera() {
+    if (scannerRef.current?.isScanning) {
+      await scannerRef.current.stop();
     }
-  }
-
-  function pararCamera() {
-    lendoCameraRef.current = false;
-    streamRef.current?.getTracks().forEach((track) => track.stop());
-    streamRef.current = null;
+    scannerRef.current?.clear();
+    scannerRef.current = null;
     setCameraAtiva(false);
   }
 
   const detalhesResultado = resultado ? textosResultado[resultado.result] : null;
+
+  if (!user || (user.role !== 'GATE' && user.role !== 'ADMIN')) {
+    return (
+      <AcessoRestrito
+        titulo="Portaria protegida"
+        mensagem="Entre com uma conta de portaria ou administrador para validar ingressos."
+      />
+    );
+  }
 
   return (
     <main>
@@ -209,11 +184,9 @@ export default function GatePage() {
               </div>
 
               {cameraAtiva && (
-                <video
-                  ref={videoRef}
-                  muted
-                  playsInline
-                  className="aspect-video w-full border-2 border-arcano-main bg-black object-cover"
+                <div
+                  id="leitor-qr-portaria"
+                  className="overflow-hidden border-2 border-arcano-main bg-black"
                 />
               )}
             </div>

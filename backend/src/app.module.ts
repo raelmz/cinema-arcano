@@ -9,6 +9,7 @@ import { AuthModule } from './auth/auth.module';
 import { MoviesModule } from './movies/movies.module';
 import { SessionsModule } from './sessions/sessions.module';
 import { ReservationsModule } from './reservations/reservations.module';
+import { GateModule } from './gate/gate.module';
 
 @Module({
   imports: [
@@ -20,6 +21,7 @@ import { ReservationsModule } from './reservations/reservations.module';
     MoviesModule,
     SessionsModule,
     ReservationsModule,
+    GateModule,
   ],
   controllers: [AppController],
   providers: [AppService],

@@ -125,6 +125,7 @@ export type Reserva = {
   expiresAt?: string;
   totalAmount?: string;
   session: Sessao;
+  user: Usuario;
   seats: Array<{
     id: string;
     reservationId: string;
@@ -155,6 +156,18 @@ export type Ingresso = {
 
 export type IngressoPublico = Ingresso & {
   reservation: Reserva;
+};
+
+export type ResultadoValidacao =
+  | 'VALID'
+  | 'INVALID'
+  | 'ALREADY_USED'
+  | 'WRONG_EVENT';
+
+export type ValidacaoPortaria = {
+  result: ResultadoValidacao;
+  message: string;
+  ticket?: IngressoPublico;
 };
 
 export async function getMovies(): Promise<Movie[]> {
@@ -280,6 +293,27 @@ export async function getTicket(id: string): Promise<IngressoPublico> {
   if (!response.ok) {
     const errorData = await response.json().catch(() => ({}));
     throw new Error(errorData.message || 'Não foi possível carregar o ingresso.');
+  }
+
+  return response.json();
+}
+
+export async function validateTicket(
+  token: string,
+  data: { qrToken: string; sessionId?: string },
+): Promise<ValidacaoPortaria> {
+  const response = await fetch(`${API_URL}/gate/validate`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${token}`,
+    },
+    body: JSON.stringify(data),
+  });
+
+  if (!response.ok) {
+    const errorData = await response.json().catch(() => ({}));
+    throw new Error(errorData.message || 'Não foi possível validar o ingresso.');
   }
 
   return response.json();

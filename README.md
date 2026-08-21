@@ -4,7 +4,7 @@
 
 ### Plataforma de eventos e ingressos com identidade própria
 
-[![Status](https://img.shields.io/badge/Status-Em_desenvolvimento-0F6E56?style=flat-square)](#status)
+[![Status](https://img.shields.io/badge/Status-Deploy_realizado-0F6E56?style=flat-square)](#status)
 [![Prazo](https://img.shields.io/badge/Entrega-25%2F08%2F2026-173404?style=flat-square)](#status)
 [![Processo](https://img.shields.io/badge/Elite_Dev-Verzel-444441?style=flat-square)](#sobre)
 
@@ -23,7 +23,7 @@ Documentação completa do processo de decisão — requisitos, arquitetura, tra
 <a id="status"></a>
 ## Status
 
-🚧 **Em desenvolvimento** — projeto iniciado em 19/08/2026, entrega em 25/08/2026.
+🚀 **Deploy realizado** — projeto iniciado em 19/08/2026, entrega em 25/08/2026.
 
 - ✅ Monorepo estruturado (`frontend/` + `backend/`)
 - ✅ Banco local (PostgreSQL 16 via Docker Compose) rodando, schema migrado (10 tabelas)
@@ -41,7 +41,14 @@ Documentação completa do processo de decisão — requisitos, arquitetura, tra
 - ✅ Página 404 personalizada e estados globais de loading/erro
 - ✅ Validação por QR com câmera e fallback manual copiável
 - ✅ Páginas privadas com bloqueio visual por papel
-- 🔜 Deploy (Vercel + Render)
+- ✅ Deploy (Vercel + Render)
+
+## Links de produção
+
+- Frontend: [https://cinema-arcano.vercel.app](https://cinema-arcano.vercel.app)
+- Backend: [https://cinema-arcano-api.onrender.com](https://cinema-arcano-api.onrender.com)
+
+> O backend está no free tier do Render. A primeira requisição após um período de inatividade pode demorar por causa do cold start.
 
 Plano dia-a-dia detalhado em [`docs/PROJETO.md`](./docs/PROJETO.md#413-fluxo-de-desenvolvimento-e-plano-dia-a-dia).
 
@@ -104,9 +111,9 @@ Após rodar o seed (`npx prisma db seed`), estas contas ficam disponíveis para 
 | Cliente | `cliente2@cinemaarcano.com` | `Cliente2@123` | Testar disputa de assento/reserva com outro cliente |
 | Portaria | `portaria@cinemaarcano.com` | `Portaria@123` | Usuário preparado para o módulo de validação de ingressos |
 
-### Roteiro rápido de teste
+### Roteiro rápido de teste em produção
 
-1. Suba o backend em `http://localhost:3000` e o frontend em `http://localhost:3001`.
+1. Acesse [https://cinema-arcano.vercel.app](https://cinema-arcano.vercel.app).
 2. Entre como organizador e crie uma sessão em `/admin/sessions/new`.
 3. Gerencie sessões em `/admin/sessions`, incluindo cancelamento.
 4. Saia, entre como cliente e abra um filme com sessão disponível.
@@ -114,6 +121,7 @@ Após rodar o seed (`npx prisma db seed`), estas contas ficam disponíveis para 
 6. No checkout, escolha cartão ou PIX e simule aprovação ou recusa do pagamento.
 7. Reabra seus tickets em `/reservations`.
 8. Entre como portaria ou admin em `/gate`, cole o token do QR ou use a câmera, e valide o ingresso.
+9. Valide o mesmo ingresso novamente para confirmar o retorno de ingresso já utilizado.
 
 <img src="https://capsule-render.vercel.app/api?type=rect&color=0F6E56&height=3&section=header" width="100%" />
 

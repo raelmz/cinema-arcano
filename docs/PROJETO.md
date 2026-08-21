@@ -4,7 +4,7 @@
 
 **Última atualização**: 21/08/2026
 **Autor**: Israel Menezes de Andrade
-**Status**: Módulos Auth, Catálogo, Salas/Sessões, Reserva/Ingresso e Portaria **implementados e testados manualmente no backend/frontend onde aplicável**. Frontend já possui componentes reutilizáveis, criação e gerenciamento de sessões pelo organizador, exibição de sessões futuras, mapa de assentos, reserva, checkout com cartão/PIX, pagamento aprovado/recusado, área de Meus ingressos, ticket público com QR code, tela de validação da portaria com câmera/fallback manual, 404 personalizada, estados globais de loading/erro e bloqueio visual por papel nas páginas privadas. Próximo bloco principal: deploy e revisão final.
+**Status**: Módulos Auth, Catálogo, Salas/Sessões, Reserva/Ingresso e Portaria **implementados e testados manualmente no backend/frontend onde aplicável**. Deploy realizado: frontend em Vercel (`https://cinema-arcano.vercel.app`) e backend/PostgreSQL em Render (`https://cinema-arcano-api.onrender.com`). Frontend já possui componentes reutilizáveis, criação e gerenciamento de sessões pelo organizador, exibição de sessões futuras, mapa de assentos, reserva, checkout com cartão/PIX, pagamento aprovado/recusado, área de Meus ingressos, ticket público com QR code, tela de validação da portaria com câmera/fallback manual, 404 personalizada, estados globais de loading/erro e bloqueio visual por papel nas páginas privadas. Próximo bloco principal: polimento visual premium e revisão final.
 
 ---
 
@@ -537,6 +537,23 @@ Estilo visual: **neo-brutalismo** — sem `border-radius`, bordas sólidas de 2p
 
 **Porquê**: para avaliação, falhas silenciosas parecem bugs. Uma tela de bloqueio explícita melhora UX, acessibilidade cognitiva e segurança percebida. O token copiável preserva o fluxo da portaria em qualquer dispositivo, sem depender de suporte do navegador à câmera/leitor.
 
+### 4.48 Deploy em Vercel + Render
+
+**Decisão**: deploy feito com frontend na Vercel e backend/PostgreSQL no Render. URLs finais:
+
+- Frontend: `https://cinema-arcano.vercel.app`
+- Backend: `https://cinema-arcano-api.onrender.com`
+
+**Configuração usada**:
+
+- Backend Render: `Root Directory = backend`, build `npm install && npx prisma generate && npm run build`, start `npx prisma migrate deploy && node dist/src/main.js`.
+- Frontend Vercel: `Root Directory = frontend`, env `NEXT_PUBLIC_API_URL=https://cinema-arcano-api.onrender.com`.
+- Backend recebeu `FRONTEND_URL=https://cinema-arcano.vercel.app` para CORS de produção.
+
+**Seed em produção**: como o plano free do Render não libera shell no Web Service, o seed foi executado temporariamente pelo Start Command (`npx prisma migrate deploy && npx prisma db seed && node dist/src/main.js`) e depois o comando voltou para o formato normal. Seed confirmado por login com `admin@cinemaarcano.com`.
+
+**Trade-off**: no free tier do Render, o backend pode dormir após inatividade. Isso causa cold start na primeira requisição, aceito por ser projeto de desafio/portfólio e já documentado no README.
+
 ---
 
 ## 5. Requisitos de entrega
@@ -581,8 +598,9 @@ Estilo visual: **neo-brutalismo** — sem `border-radius`, bordas sólidas de 2p
 - [x] ~~Recusa no pagamento simulado~~ — feito, ver seção 4.46
 - [x] ~~Página 404 personalizada e estados globais de loading/erro~~ — feito, ver seção 4.46
 - [x] ~~Fallback manual para validação de QR e proteção visual de rotas privadas~~ — feito, ver seção 4.47
-- [ ] Deploy (Vercel + Render) e variáveis de ambiente de produção
-- [ ] Revisão final do README com links públicos e lista do que ficou fora/pendente
+- [x] ~~Deploy (Vercel + Render) e variáveis de ambiente de produção~~ — feito, ver seção 4.48
+- [x] ~~Revisão final do README com links públicos~~ — feito, ver seção 4.48
+- [ ] Polimento visual premium e revisão final de responsividade/acessibilidade
 
 ---
 
@@ -608,3 +626,4 @@ Estilo visual: **neo-brutalismo** — sem `border-radius`, bordas sólidas de 2p
 | 21/08/2026 | Gerenciamento de sessões e Meus ingressos implementados: backend ganhou `GET /sessions/admin/mine` e `GET /reservations/me`; frontend ganhou `/admin/sessions` com listagem/contadores/cancelamento e `/reservations` para o cliente rever reservas, pagar pendentes e reabrir tickets. Header passou a mostrar atalhos por papel (4.45). |
 | 21/08/2026 | Checkout simulado implementado: nova rota `/reservations/[id]/payment` com cartão/PIX, aprovação e recusa; backend `POST /reservations/:id/pay` aceita método e falha simulada, grava `Payment FAILED`, cancela reserva e libera assentos. Criadas páginas globais `not-found.tsx`, `loading.tsx` e `error.tsx` para acabamento visual (4.46). |
 | 21/08/2026 | Ajustes de produção antes da entrega: portaria trocada para `html5-qrcode`, ticket exibe token copiável para validação manual, páginas privadas usam `AcessoRestrito` em vez de redirecionamento silencioso, e backend permite validação por `GATE` ou `ADMIN` (4.47). |
+| 21/08/2026 | Deploy realizado: backend/PostgreSQL no Render, frontend na Vercel, seed de produção confirmado via login, CORS de produção configurado com `FRONTEND_URL`, e README atualizado com links públicos e roteiro de teste em produção (4.48). |

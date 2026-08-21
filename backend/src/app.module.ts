@@ -8,6 +8,7 @@ import { ConfigModule } from '@nestjs/config/dist/config.module';
 import { AuthModule } from './auth/auth.module';
 import { MoviesModule } from './movies/movies.module';
 import { SessionsModule } from './sessions/sessions.module';
+import { ReservationsModule } from './reservations/reservations.module';
 
 @Module({
   imports: [
@@ -18,6 +19,7 @@ import { SessionsModule } from './sessions/sessions.module';
     AuthModule,
     MoviesModule,
     SessionsModule,
+    ReservationsModule,
   ],
   controllers: [AppController],
   providers: [AppService],

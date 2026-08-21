@@ -109,6 +109,12 @@ export type Sessao = {
   occupiedSeatIds?: string[];
 };
 
+export type SessaoAdministrativa = Sessao & {
+  reservationsCount: number;
+  reservedSeatsCount: number;
+  soldSeatsCount: number;
+};
+
 export type Assento = {
   id: string;
   roomId: string;
@@ -125,7 +131,7 @@ export type Reserva = {
   expiresAt?: string;
   totalAmount?: string;
   session: Sessao;
-  user: Usuario;
+  user?: Usuario;
   seats: Array<{
     id: string;
     reservationId: string;
@@ -238,12 +244,44 @@ export async function getSessions(): Promise<Sessao[]> {
   return response.json();
 }
 
+export async function getAdminSessions(
+  token: string,
+): Promise<SessaoAdministrativa[]> {
+  const response = await fetch(`${API_URL}/sessions/admin/mine`, {
+    headers: { Authorization: `Bearer ${token}` },
+  });
+
+  if (!response.ok) {
+    const errorData = await response.json().catch(() => ({}));
+    throw new Error(errorData.message || 'Não foi possível carregar suas sessões.');
+  }
+
+  return response.json();
+}
+
 export async function getSession(id: string): Promise<Sessao> {
   const response = await fetch(`${API_URL}/sessions/${id}`);
 
   if (!response.ok) {
     const errorData = await response.json().catch(() => ({}));
     throw new Error(errorData.message || 'Não foi possível carregar a sessão.');
+  }
+
+  return response.json();
+}
+
+export async function cancelSession(
+  token: string,
+  sessionId: string,
+): Promise<Sessao> {
+  const response = await fetch(`${API_URL}/sessions/${sessionId}/cancel`, {
+    method: 'PATCH',
+    headers: { Authorization: `Bearer ${token}` },
+  });
+
+  if (!response.ok) {
+    const errorData = await response.json().catch(() => ({}));
+    throw new Error(errorData.message || 'Não foi possível cancelar a sessão.');
   }
 
   return response.json();
@@ -282,6 +320,19 @@ export async function payReservation(
   if (!response.ok) {
     const errorData = await response.json().catch(() => ({}));
     throw new Error(errorData.message || 'Não foi possível confirmar o pagamento.');
+  }
+
+  return response.json();
+}
+
+export async function getMyReservations(token: string): Promise<Reserva[]> {
+  const response = await fetch(`${API_URL}/reservations/me`, {
+    headers: { Authorization: `Bearer ${token}` },
+  });
+
+  if (!response.ok) {
+    const errorData = await response.json().catch(() => ({}));
+    throw new Error(errorData.message || 'Não foi possível carregar suas reservas.');
   }
 
   return response.json();

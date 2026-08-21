@@ -201,6 +201,31 @@ export class ReservationsService {
     return reservation;
   }
 
+  async findMine(userId: string) {
+    const reservations = await this.prisma.reservation.findMany({
+      where: { userId },
+      include: this.reservationInclude(),
+      orderBy: { createdAt: 'desc' },
+    });
+
+    return Promise.all(
+      reservations.map(async (reservation) => {
+        if (
+          reservation.status === ReservationStatus.PENDING &&
+          this.isReservationExpired(reservation.createdAt)
+        ) {
+          return this.prisma.reservation.update({
+            where: { id: reservation.id },
+            data: { status: ReservationStatus.EXPIRED },
+            include: this.reservationInclude(),
+          });
+        }
+
+        return reservation;
+      }),
+    );
+  }
+
   async findTicket(ticketId: string) {
     const ticket = await this.prisma.ticket.findUnique({
       where: { id: ticketId },

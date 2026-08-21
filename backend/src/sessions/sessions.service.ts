@@ -101,6 +101,33 @@ export class SessionsService {
     return sessions.map((session) => this.withComputedStatus(session));
   }
 
+  async findMine(organizerId: string) {
+    const sessions = await this.prisma.session.findMany({
+      where: { organizerId },
+      include: {
+        movie: true,
+        room: true,
+        reservations: {
+          select: { id: true, status: true },
+        },
+        reservationSeats: {
+          select: { id: true, reservation: { select: { status: true } } },
+        },
+      },
+      orderBy: { startTime: 'desc' },
+    });
+
+    return sessions.map((session) => ({
+      ...this.withComputedStatus(session),
+      reservationsCount: session.reservations.length,
+      reservedSeatsCount: session.reservationSeats.length,
+      soldSeatsCount: session.reservationSeats.filter(
+        (reservationSeat) =>
+          reservationSeat.reservation.status === 'CONFIRMED',
+      ).length,
+    }));
+  }
+
   async findOne(id: string) {
     const reservationExpirationLimit = new Date(Date.now() - 60 * 60_000);
     const session = await this.prisma.session.findUnique({

@@ -37,6 +37,14 @@ export class SessionsController {
     return this.sessionsService.findAllPublic();
   }
 
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('ADMIN')
+  @Get('admin/mine')
+  findMine(@Req() req: Request) {
+    const organizerId = (req['user'] as { sub: string }).sub;
+    return this.sessionsService.findMine(organizerId);
+  }
+
   @Get(':id')
   findOne(@Param('id') id: string) {
     return this.sessionsService.findOne(id);

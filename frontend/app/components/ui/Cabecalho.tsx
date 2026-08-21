@@ -33,11 +33,37 @@ export function Cabecalho() {
           </Link>
 
           {user?.role === 'ADMIN' && (
+            <>
+              <Link
+                className="text-white/70 hover:text-arcano-main"
+                href="/admin/sessions"
+              >
+                Sessões
+              </Link>
+              <Link
+                className="text-white/70 hover:text-arcano-main"
+                href="/admin/sessions/new"
+              >
+                Nova Sessão
+              </Link>
+            </>
+          )}
+
+          {user?.role === 'CUSTOMER' && (
             <Link
               className="text-white/70 hover:text-arcano-main"
-              href="/admin/sessions/new"
+              href="/reservations"
             >
-              Nova Sessão
+              Meus Ingressos
+            </Link>
+          )}
+
+          {user?.role === 'GATE' && (
+            <Link
+              className="text-white/70 hover:text-arcano-main"
+              href="/gate"
+            >
+              Portaria
             </Link>
           )}
 

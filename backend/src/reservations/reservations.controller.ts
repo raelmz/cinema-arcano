@@ -38,6 +38,14 @@ export class ReservationsController {
 
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles('CUSTOMER')
+  @Get('me')
+  findMine(@Req() req: Request) {
+    const userId = (req['user'] as { sub: string }).sub;
+    return this.reservationsService.findMine(userId);
+  }
+
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('CUSTOMER')
   @Get(':id')
   findOne(@Param('id') id: string, @Req() req: Request) {
     const userId = (req['user'] as { sub: string }).sub;

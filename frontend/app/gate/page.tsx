@@ -247,7 +247,9 @@ export default function GatePage() {
                     </p>
                     <p>
                       Cliente:{' '}
-                      <strong>{resultado.ticket.reservation.user.name}</strong>
+                      <strong>
+                        {resultado.ticket.reservation.user?.name ?? 'Cliente'}
+                      </strong>
                     </p>
                   </div>
                 )}

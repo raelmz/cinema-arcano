@@ -311,15 +311,36 @@ export async function createReservation(
 export async function payReservation(
   token: string,
   reservationId: string,
-): Promise<Reserva & { ticket: Ingresso }> {
+  data: { method?: 'CARD' | 'PIX'; simulateFailure?: boolean } = {},
+): Promise<Reserva & { ticket: Ingresso | null }> {
   const response = await fetch(`${API_URL}/reservations/${reservationId}/pay`, {
     method: 'POST',
-    headers: { Authorization: `Bearer ${token}` },
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${token}`,
+    },
+    body: JSON.stringify(data),
   });
 
   if (!response.ok) {
     const errorData = await response.json().catch(() => ({}));
     throw new Error(errorData.message || 'Não foi possível confirmar o pagamento.');
+  }
+
+  return response.json();
+}
+
+export async function getReservation(
+  token: string,
+  reservationId: string,
+): Promise<Reserva> {
+  const response = await fetch(`${API_URL}/reservations/${reservationId}`, {
+    headers: { Authorization: `Bearer ${token}` },
+  });
+
+  if (!response.ok) {
+    const errorData = await response.json().catch(() => ({}));
+    throw new Error(errorData.message || 'Não foi possível carregar a reserva.');
   }
 
   return response.json();

@@ -13,6 +13,7 @@ import { Prisma, ReservationStatus } from '@prisma/client';
 import { randomUUID } from 'crypto';
 import { PrismaService } from '../prisma/prisma.service';
 import { CreateReservationDto } from './dto/create-reservation.dto';
+import { PayReservationDto } from './dto/pay-reservation.dto';
 
 const RESERVATION_EXPIRATION_MINUTES = 60;
 const FALLBACK_DURATION_MINUTES = 120;
@@ -105,7 +106,7 @@ export class ReservationsService {
     }
   }
 
-  async pay(id: string, userId: string) {
+  async pay(id: string, userId: string, dto: PayReservationDto = {}) {
     return this.prisma.$transaction(async (tx) => {
       const reservation = await tx.reservation.findUnique({
         where: { id },
@@ -138,6 +139,28 @@ export class ReservationsService {
       const amount = new Prisma.Decimal(reservation.session.price).mul(
         reservation.seats.length,
       );
+
+      if (dto.simulateFailure) {
+        await tx.payment.create({
+          data: {
+            reservationId: reservation.id,
+            status: 'FAILED',
+            amount,
+            method: dto.method ?? 'SIMULATED',
+          },
+        });
+
+        await tx.reservationSeat.deleteMany({
+          where: { reservationId: reservation.id },
+        });
+
+        return tx.reservation.update({
+          where: { id: reservation.id },
+          data: { status: ReservationStatus.CANCELLED },
+          include: this.reservationInclude(),
+        });
+      }
+
       const ticketId = randomUUID();
 
       const ticket = await tx.ticket.create({
@@ -158,6 +181,7 @@ export class ReservationsService {
           reservationId: reservation.id,
           status: 'APPROVED',
           amount,
+          method: dto.method ?? 'SIMULATED',
           paidAt: new Date(),
         },
       });

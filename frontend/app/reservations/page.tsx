@@ -5,11 +5,10 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import { Aviso } from '../components/ui/Aviso';
-import { Botao } from '../components/ui/Botao';
 import { Cartao } from '../components/ui/Cartao';
 import { Container } from '../components/ui/Container';
 import { useAuth } from '../context/AuthContext';
-import { getMyReservations, payReservation, type Reserva } from '../services/api';
+import { getMyReservations, type Reserva } from '../services/api';
 
 const labelsStatus = {
   PENDING: 'Pendente',
@@ -40,7 +39,6 @@ export default function ReservationsPage() {
   const { user, token, isLoading } = useAuth();
   const [reservas, setReservas] = useState<Reserva[]>([]);
   const [carregando, setCarregando] = useState(true);
-  const [pagandoId, setPagandoId] = useState('');
   const [erro, setErro] = useState('');
 
   useEffect(() => {
@@ -77,25 +75,6 @@ export default function ReservationsPage() {
     carregarReservasIniciais();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [token, user]);
-
-  async function pagar(reserva: Reserva) {
-    if (!token) {
-      setErro('Sessão expirada. Faça login novamente.');
-      return;
-    }
-
-    setPagandoId(reserva.id);
-    setErro('');
-
-    try {
-      const reservaPaga = await payReservation(token, reserva.id);
-      router.push(`/tickets/${reservaPaga.ticket.id}`);
-    } catch (error) {
-      setErro(error instanceof Error ? error.message : 'Erro ao confirmar pagamento.');
-    } finally {
-      setPagandoId('');
-    }
-  }
 
   if (isLoading || user?.role !== 'CUSTOMER') {
     return (
@@ -180,13 +159,12 @@ export default function ReservationsPage() {
                     Abrir ticket
                   </Link>
                 ) : reserva.status === 'PENDING' ? (
-                  <Botao
-                    variante="secundario"
-                    disabled={pagandoId === reserva.id}
-                    onClick={() => pagar(reserva)}
+                  <Link
+                    href={`/reservations/${reserva.id}/payment`}
+                    className="border-2 border-arcano-sec bg-arcano-sec px-4 py-3 text-sm font-bold uppercase tracking-wide text-white hover:border-arcano-main hover:bg-arcano-main hover:text-arcano-bg"
                   >
-                    {pagandoId === reserva.id ? 'Pagando...' : 'Pagar'}
-                  </Botao>
+                    Pagar
+                  </Link>
                 ) : (
                   <span className="border-2 border-white/10 px-4 py-3 text-sm font-bold uppercase tracking-wide text-white/35">
                     Sem ticket

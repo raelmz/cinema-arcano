@@ -12,7 +12,6 @@ import { useAuth } from '../../context/AuthContext';
 import {
   createReservation,
   getSession,
-  payReservation,
   Reserva,
   Sessao,
 } from '../../services/api';
@@ -99,28 +98,6 @@ export default function SessionPage() {
       setReserva(novaReserva);
     } catch (error) {
       setErro(error instanceof Error ? error.message : 'Erro ao criar reserva.');
-    } finally {
-      setProcessando(false);
-    }
-  }
-
-  async function pagarReserva() {
-    setErro('');
-
-    if (!token || !reserva) {
-      setErro('Reserva não encontrada para pagamento.');
-      return;
-    }
-
-    setProcessando(true);
-
-    try {
-      const reservaPaga = await payReservation(token, reserva.id);
-      router.push(`/tickets/${reservaPaga.ticket.id}`);
-    } catch (error) {
-      setErro(
-        error instanceof Error ? error.message : 'Erro ao confirmar pagamento.',
-      );
     } finally {
       setProcessando(false);
     }
@@ -256,9 +233,9 @@ export default function SessionPage() {
                   variante="secundario"
                   className="w-full"
                   disabled={processando}
-                  onClick={pagarReserva}
+                  onClick={() => router.push(`/reservations/${reserva.id}/payment`)}
                 >
-                  {processando ? 'Confirmando...' : 'Pagar agora'}
+                  Ir para pagamento
                 </Botao>
               </div>
             ) : (

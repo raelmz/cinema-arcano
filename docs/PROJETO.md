@@ -4,7 +4,7 @@
 
 **Última atualização**: 21/08/2026
 **Autor**: Israel Menezes de Andrade
-**Status**: Módulos Auth, Catálogo, Salas/Sessões, Reserva/Ingresso e Portaria **implementados e testados manualmente no backend/frontend onde aplicável**. Frontend já possui componentes reutilizáveis, criação de sessões pelo organizador, exibição de sessões futuras, mapa de assentos, reserva, pagamento simulado, ticket público com QR code e tela de validação da portaria. Próximo bloco principal: deploy e revisão final.
+**Status**: Módulos Auth, Catálogo, Salas/Sessões, Reserva/Ingresso e Portaria **implementados e testados manualmente no backend/frontend onde aplicável**. Frontend já possui componentes reutilizáveis, criação e gerenciamento de sessões pelo organizador, exibição de sessões futuras, mapa de assentos, reserva, pagamento simulado, área de Meus ingressos, ticket público com QR code e tela de validação da portaria. Próximo bloco principal: deploy e revisão final.
 
 ---
 
@@ -64,10 +64,11 @@ Decidi dar identidade própria ao produto em vez de entregar um cinema genérico
 
 ### Front-End
 - [x] Navegação e busca de eventos publicados (data, local, preço) — catálogo de filmes via TMDb; ver seções 4.26 a 4.30
-- [x] Criação de eventos/sessões pelo organizador — tela `/admin/sessions/new`; gerenciamento/cancelamento pelo front ainda pendente
+- [x] Criação e gerenciamento de eventos/sessões pelo organizador — telas `/admin/sessions/new` e `/admin/sessions`
 - [x] Fluxo de reserva com seleção de lugar em mapa de assentos
 - [x] Pagamento simulado — caminho de confirmação implementado; recusa simulada ainda pode ser refinada
 - [x] Ticket público com exibição do QR code
+- [x] Cliente consegue rever reservas/ingressos em `/reservations`
 - [x] Tela de portaria com retorno claro: válido / inválido / já utilizado / evento errado
 - [x] Leitura de QR via câmera na portaria, com digitação manual como alternativa
 
@@ -508,6 +509,16 @@ Estilo visual: **neo-brutalismo** — sem `border-radius`, bordas sólidas de 2p
 
 **Porquê**: a Portaria fecha o ciclo do desafio: ingresso não forjável → validação → bloqueio de reuso → registro de auditoria. O endpoint centraliza a regra no backend para não depender da UI; a tela é só uma camada operacional para o recrutador testar.
 
+### 4.45 Gerenciamento de sessões e Meus ingressos
+
+**Decisão**: adicionados dois endpoints autenticados para áreas logadas: `GET /sessions/admin/mine` para o organizador listar todas as sessões que criou, incluindo canceladas/finalizadas e contadores operacionais; e `GET /reservations/me` para o cliente rever suas reservas e tickets. No frontend, foram criadas as telas `/admin/sessions` e `/reservations`, além de links no cabeçalho conforme o papel do usuário.
+
+**Gerenciamento do organizador**: a tela `/admin/sessions` mostra totais por status, dados de filme/sala/horário/preço, contadores de reservas/assentos e botão para cancelar sessões `SCHEDULED` usando o endpoint já existente `PATCH /sessions/:id/cancel`.
+
+**Meus ingressos**: a tela `/reservations` lista reservas do cliente, mostra status da reserva e do pagamento, assentos, total estimado e permite abrir novamente o ticket quando já existe. Reservas `PENDING` ainda podem ser pagas por ali.
+
+**Porquê**: essas duas áreas reduzem dependência de fluxo linear para teste. O recrutador não precisa “perder” o link do ticket se sair da tela, e o organizador consegue conferir/cancelar sessões sem chamar a API manualmente. Mantive edição de sessão fora deste bloco porque cancelamento cobre a operação crítica do desafio sem introduzir regras ambíguas sobre alterar horário/preço depois de reservas existentes.
+
 ---
 
 ## 5. Requisitos de entrega
@@ -544,10 +555,11 @@ Estilo visual: **neo-brutalismo** — sem `border-radius`, bordas sólidas de 2p
 - [x] ~~Criar base de componentes reutilizáveis no frontend~~ — feito, ver seção 4.39
 - [x] ~~Iniciar frontend de Salas/Sessões~~ — feito, ver seção 4.40
 - [ ] Limpeza opcional: remover boilerplate morto do `globals.css` (`:root`, `@theme inline`, `@media prefers-color-scheme`, sobras do `create-next-app` não usadas pelo tema Cinema Arcano)
-- [ ] Frontend de Salas/Sessões: gerenciamento/cancelamento de sessões pelo organizador
+- [x] ~~Frontend de Salas/Sessões: gerenciamento/cancelamento de sessões pelo organizador~~ — feito, ver seção 4.45
 - [x] ~~Frontend de Reserva/Ingresso: mapa de assentos, pagamento simulado e tela pública do ticket~~ — feito, ver seção 4.42
 - [x] ~~Documentar contas de teste para o recrutador~~ — feito, ver seção 4.43
 - [x] ~~Módulo de Portaria: validação do QR, bloqueio de reuso e registro em `ValidationLog`~~ — feito, ver seção 4.44
+- [x] ~~Meus ingressos / minhas reservas para cliente~~ — feito, ver seção 4.45
 - [ ] Deploy (Vercel + Render) e variáveis de ambiente de produção
 - [ ] Revisão final do README com links públicos e lista do que ficou fora/pendente
 
@@ -572,3 +584,4 @@ Estilo visual: **neo-brutalismo** — sem `border-radius`, bordas sólidas de 2p
 | 21/08/2026 | Frontend de Salas/Sessões iniciado: componentes reutilizáveis criados (`Cabecalho`, `Rodape`, `Container`, `Cartao`, `Botao`, `CampoTexto`, `Aviso`, `CartaoFilme`), telas existentes refatoradas para usar a base visual, `/admin/sessions/new` implementada para criação de sessões por ADMIN, detalhes do filme exibindo sessões futuras, e script `npm run dev` do frontend fixado na porta 3001 para evitar conflito com o backend na 3000 (4.39/4.40). Uso de IA atualizado: migração de Claude Sonnet para ChatGPT Codex documentada por limitações de crédito e pela vantagem de acesso direto ao workspace (4.41). |
 | 21/08/2026 | Frontend de Reserva/Ingresso implementado: `GET /sessions/:id` passou a retornar assentos e ocupação; rota `/sessions/[id]` criada com mapa de assentos, criação de reserva `PENDING` e pagamento simulado; rota `/tickets/[id]` criada com ticket público e QR code real via `qrcode` (4.42). README atualizado com contas de teste do seed e roteiro rápido para o recrutador validar organizador → cliente → ticket (4.43). |
 | 21/08/2026 | Módulo de Portaria implementado: backend `GateModule` com `POST /gate/validate` restrito a `GATE`, validação de QR assinado, retorno `VALID`/`INVALID`/`ALREADY_USED`/`WRONG_EVENT`, marcação do ticket como `USED`, registro em `ValidationLog` e migration para permitir log de token inválido sem ticket associado. Frontend `/gate` criado com digitação manual e leitura por câmera via `BarcodeDetector` quando disponível (4.44). |
+| 21/08/2026 | Gerenciamento de sessões e Meus ingressos implementados: backend ganhou `GET /sessions/admin/mine` e `GET /reservations/me`; frontend ganhou `/admin/sessions` com listagem/contadores/cancelamento e `/reservations` para o cliente rever reservas, pagar pendentes e reabrir tickets. Header passou a mostrar atalhos por papel (4.45). |

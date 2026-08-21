@@ -28,10 +28,13 @@ Documentação completa do processo de decisão — requisitos, arquitetura, tra
 - ✅ Monorepo estruturado (`frontend/` + `backend/`)
 - ✅ Banco local (PostgreSQL 16 via Docker Compose) rodando, schema migrado (10 tabelas)
 - ✅ **Módulo de Autenticação completo**: registro, login, `/auth/me`, guards JWT + RBAC (`JwtAuthGuard`, `RolesGuard`), seed de usuários (1 organizador, 2 clientes, 1 portaria)
-- 🔜 Catálogo de filmes (integração TMDb)
-- 🔜 Salas, assentos e sessões
-- 🔜 Reserva com mapa de assentos + pagamento simulado
-- 🔜 Ingresso com QR code assinado (JWT)
+- ✅ Catálogo de filmes (integração TMDb)
+- ✅ Backend de salas, assentos e sessões
+- ✅ Backend de reserva + pagamento simulado
+- ✅ Backend de ingresso com QR code assinado (JWT)
+- ✅ Base de componentes reutilizáveis no frontend
+- ✅ Tela do organizador para criar sessões
+- 🔜 Mapa de assentos e fluxo de reserva no frontend
 - 🔜 Validação de ingresso na portaria
 - 🔜 Deploy (Vercel + Render)
 
@@ -87,6 +90,8 @@ _Instruções de setup completas de ponta a ponta serão consolidadas aqui confo
 
 ## Uso de IA neste projeto
 
-Este projeto foi desenvolvido com apoio de IA para organização de ideias, revisão de trade-offs, geração de código de apoio e documentação. Todas as decisões de produto e arquitetura são registradas com justificativa própria em [`docs/PROJETO.md`](./docs/PROJETO.md) — não apenas o resultado final, mas o porquê de cada escolha. Detalhamento completo de onde e como a IA foi usada — e o que foi feito sem ela — será adicionado ao final do desenvolvimento.
+Este projeto foi desenvolvido com apoio de IA para organização de ideias, revisão de trade-offs, geração de código de apoio e documentação. Todas as decisões de produto e arquitetura são registradas com justificativa própria em [`docs/PROJETO.md`](./docs/PROJETO.md) — não apenas o resultado final, mas o porquê de cada escolha.
+
+Durante o desenvolvimento usei principalmente Claude Sonnet e, depois, migrei para ChatGPT Codex por limitações de crédito no plano gratuito do Claude. Também estou usando o Codex no modo gratuito, mas o acesso direto à pasta de trabalho do projeto reduziu retrabalho e chamadas desnecessárias: a ferramenta consegue ler os arquivos reais do repositório, aplicar alterações locais, rodar `lint`/`build` e manter o contexto de continuidade mais fiel ao estado atual do código.
 
 <img src="https://capsule-render.vercel.app/api?type=rect&color=0:0F6E56,100:173404&height=100&section=footer" width="100%" />

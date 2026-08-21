@@ -4,7 +4,7 @@
 
 **Última atualização**: 21/08/2026
 **Autor**: Israel Menezes de Andrade
-**Status**: Módulos Auth e Catálogo **completos, backend e frontend, ambos implementados, testados e commitados**. Módulos Salas/Sessões e Reserva/Ingresso **concluídos no backend, testados manualmente e commitados**. Frontend de Salas/Sessões, frontend de Reserva/Ingresso e módulo de Portaria ainda pendentes.
+**Status**: Módulos Auth e Catálogo **completos, backend e frontend, ambos implementados, testados e commitados**. Módulos Salas/Sessões e Reserva/Ingresso **concluídos no backend, testados manualmente e commitados**. Frontend de Salas/Sessões iniciado com componentes reutilizáveis, header/footer globais, tela administrativa de criação de sessões e exibição de sessões futuras no detalhe do filme. Frontend de Reserva/Ingresso e módulo de Portaria ainda pendentes.
 
 ---
 
@@ -64,7 +64,7 @@ Decidi dar identidade própria ao produto em vez de entregar um cinema genérico
 
 ### Front-End
 - [x] Navegação e busca de eventos publicados (data, local, preço) — catálogo de filmes via TMDb; ver seções 4.26 a 4.30
-- [ ] Criação e gerenciamento de eventos (organizador)
+- [x] Criação de eventos/sessões pelo organizador — tela `/admin/sessions/new`; gerenciamento/cancelamento pelo front ainda pendente
 - [ ] Fluxo de reserva com seleção de lugar em mapa de assentos
 - [ ] Pagamento simulado — com caminho de confirmação **e** de recusa
 - [ ] "Meus ingressos" com exibição do QR code
@@ -466,6 +466,24 @@ Estilo visual: **neo-brutalismo** — sem `border-radius`, bordas sólidas de 2p
 
 **Porquê**: separar reserva e pagamento reflete melhor o fluxo real de compra (assentos travados primeiro, confirmação depois). A constraint `UNIQUE(sessionId, seatId)` continua sendo a garantia principal contra venda duplicada, e a aplicação traduz a colisão do Prisma em `409 Conflict`. A expiração on-the-fly evita infraestrutura extra e mantém o escopo proporcional ao desafio.
 
+### 4.39 Componentes reutilizáveis no frontend
+
+**Decisão**: antes de avançar no mapa de assentos, criei uma base de componentes reutilizáveis em `frontend/app/components/`: `Cabecalho`, `Rodape`, `Container`, `Cartao`, `Botao`, `CampoTexto`, `Aviso` e `CartaoFilme`. Home, login, cadastro e detalhe do filme passaram a usar essa base, e o `layout.tsx` ganhou header/footer globais.
+
+**Porquê**: o frontend começava a repetir classes e padrões visuais nas telas. Criar componentes pequenos agora reduz retrabalho nas próximas telas (admin, reserva, ticket, portaria), mantém o neo-brutalismo consistente e evita que cada página vire uma composição diferente. O cuidado aqui foi não criar um design system grande demais: só componentes que já tinham uso real ou uso imediato no próximo módulo.
+
+### 4.40 Frontend inicial de Salas/Sessões
+
+**Decisão**: criada a tela `/admin/sessions/new` para o organizador buscar filmes no catálogo, selecionar um resultado, informar data/hora e preço, e chamar `POST /sessions` com token de ADMIN. A página de detalhes do filme também passou a consultar `GET /sessions` e exibir as sessões futuras daquele filme.
+
+**Porquê**: esse é o menor fluxo visível que conecta o backend de sessões ao frontend sem misturar a área administrativa com a vitrine do cliente. A tela de detalhe exibe horários e preço, mas ainda não mostra botão de escolher assentos porque a rota de mapa/reserva ainda não existe; manter um botão morto seria pior para a avaliação do que deixar a ação para o próximo bloco.
+
+### 4.41 Ferramentas de IA usadas no processo
+
+**Decisão**: documentar explicitamente a mudança de ferramenta de IA ao longo do desenvolvimento. Comecei usando Claude Sonnet como apoio principal, com uma sessão pontual no Gemini Pro, e depois migrei para ChatGPT Codex por causa das limitações de crédito do plano gratuito do Claude. O Codex também está sendo usado em modo gratuito.
+
+**Porquê**: o desafio pede transparência sobre uso de IA, e essa troca afetou o fluxo de trabalho. O principal ganho do Codex neste projeto foi o acesso direto à pasta de trabalho: ler os arquivos reais, aplicar patches, rodar `lint`/`build`, verificar status do Git e manter o contexto local mais fiel reduziu retrabalho e consumo de tokens com cópias manuais de arquivo. Ainda assim, as decisões de produto e arquitetura continuam registradas e justificadas neste documento, em primeira pessoa.
+
 ---
 
 ## 5. Requisitos de entrega
@@ -499,8 +517,10 @@ Estilo visual: **neo-brutalismo** — sem `border-radius`, bordas sólidas de 2p
 - [x] ~~Rodar migration (se ainda não aplicada) e escrever seed de `Room`/`Seat` (sala única, 40 assentos)~~ — feito, ver seção 4.31
 - [x] ~~Implementar módulo de Salas/Assentos/Sessões no backend~~ — feito, ver seções 4.34 a 4.37
 - [x] ~~Implementar módulo de Reserva/Ingresso no backend~~ — feito, ver seção 4.38
+- [x] ~~Criar base de componentes reutilizáveis no frontend~~ — feito, ver seção 4.39
+- [x] ~~Iniciar frontend de Salas/Sessões~~ — feito, ver seção 4.40
 - [ ] Limpeza opcional: remover boilerplate morto do `globals.css` (`:root`, `@theme inline`, `@media prefers-color-scheme`, sobras do `create-next-app` não usadas pelo tema Cinema Arcano)
-- [ ] Frontend de Salas/Sessões: tela do organizador para criar sessão e exibição de sessões futuras
+- [ ] Frontend de Salas/Sessões: gerenciamento/cancelamento de sessões pelo organizador
 - [ ] Frontend de Reserva/Ingresso: mapa de assentos, pagamento simulado e tela pública do ticket
 - [ ] Módulo de Portaria: validação do QR, bloqueio de reuso e registro em `ValidationLog`
 
@@ -522,3 +542,4 @@ Estilo visual: **neo-brutalismo** — sem `border-radius`, bordas sólidas de 2p
 | 21/08/2026 | Frontend do módulo Catálogo implementado a partir da leitura direta dos arquivos reais do projeto: Home com populares e busca, página de detalhes como server component, três novas funções em `api.ts` (4.27). Pôsteres via `next/image` com `remotePatterns` liberando `image.tmdb.org` (4.28). Testes manuais no navegador revelaram e corrigiram dois bugs: CORS ausente no backend, bloqueando as chamadas do frontend (4.29), e `Image` com `fill` vazando pela página de detalhes por falta de `position: relative` no elemento pai. Nova convenção fechada: caminho do arquivo como comentário na primeira linha em toda entrega de IA (4.30). Módulo Catálogo (frontend) commitado em dois commits separados: `feat(catalog)` e `fix(backend)` do CORS. Módulo Catálogo fica **100% completo, backend e frontend, commitado**. |
 | 21/08/2026 | `schema.prisma` conferido contra todas as decisões do módulo Salas/Sessões (4.31/4.32) — sem inconsistência, sem migration de estrutura pendente. Enum `SessionStatus` (`SCHEDULED`/`CANCELLED`/`FINISHED`), presente no schema mas sem decisão registrada até então, decidido: escopo mínimo, só `SCHEDULED`/`CANCELLED` geridos pela aplicação (organizador pode cancelar sessão sem deletar a linha, e a validação de conflito de horário passa a ignorar sessões `CANCELLED`), `FINISHED` é só calculado na consulta, nunca persistido (4.33). Seed de `Room`/`Seat` ainda não escrita — pendente antes de iniciar o `SessionsModule`. |
 | 21/08/2026 | Backend de Salas/Sessões concluído e commitado: seed de sala/assentos, `SessionsModule`, conflito de horário, cancelamento, status `FINISHED` calculado, `roomId` implícito, fallback de 120 minutos e vínculo entre TMDb e `Movie` local via upsert (4.34 a 4.37). Backend de Reserva/Ingresso concluído e commitado: `ReservationsModule`, reserva `PENDING`, pagamento simulado, ticket público, QR/JWT com expiração no fim da sessão, liberação on-the-fly de reservas expiradas e teste manual completo (4.38). |
+| 21/08/2026 | Frontend de Salas/Sessões iniciado: componentes reutilizáveis criados (`Cabecalho`, `Rodape`, `Container`, `Cartao`, `Botao`, `CampoTexto`, `Aviso`, `CartaoFilme`), telas existentes refatoradas para usar a base visual, `/admin/sessions/new` implementada para criação de sessões por ADMIN, detalhes do filme exibindo sessões futuras, e script `npm run dev` do frontend fixado na porta 3001 para evitar conflito com o backend na 3000 (4.39/4.40). Uso de IA atualizado: migração de Claude Sonnet para ChatGPT Codex documentada por limitações de crédito e pela vantagem de acesso direto ao workspace (4.41). |

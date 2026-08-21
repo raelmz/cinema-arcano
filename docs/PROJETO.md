@@ -4,7 +4,7 @@
 
 **Última atualização**: 21/08/2026
 **Autor**: Israel Menezes de Andrade
-**Status**: Módulos Auth, Catálogo, Salas/Sessões e Reserva/Ingresso **implementados, testados manualmente e commitados no backend/frontend onde aplicável**. Frontend já possui componentes reutilizáveis, criação de sessões pelo organizador, exibição de sessões futuras, mapa de assentos, reserva, pagamento simulado e ticket público com QR code. Módulo de Portaria ainda pendente.
+**Status**: Módulos Auth, Catálogo, Salas/Sessões, Reserva/Ingresso e Portaria **implementados e testados manualmente no backend/frontend onde aplicável**. Frontend já possui componentes reutilizáveis, criação de sessões pelo organizador, exibição de sessões futuras, mapa de assentos, reserva, pagamento simulado, ticket público com QR code e tela de validação da portaria. Próximo bloco principal: deploy e revisão final.
 
 ---
 
@@ -68,8 +68,8 @@ Decidi dar identidade própria ao produto em vez de entregar um cinema genérico
 - [x] Fluxo de reserva com seleção de lugar em mapa de assentos
 - [x] Pagamento simulado — caminho de confirmação implementado; recusa simulada ainda pode ser refinada
 - [x] Ticket público com exibição do QR code
-- [ ] Tela de portaria com retorno claro: válido / inválido / já utilizado / evento errado
-- [ ] Leitura de QR via câmera na portaria, com digitação manual como alternativa
+- [x] Tela de portaria com retorno claro: válido / inválido / já utilizado / evento errado
+- [x] Leitura de QR via câmera na portaria, com digitação manual como alternativa
 
 *(Autenticação — login e cadastro — não está listada como item separado nesta seção porque é pré-requisito transversal aos itens acima, não um requisito funcional isolado do desafio. Está implementada; ver seção 4.20 a 4.24.)*
 
@@ -80,7 +80,7 @@ Decidi dar identidade própria ao produto em vez de entregar um cinema genérico
 - [x] Garantia de que o mesmo assento não seja vendido duas vezes (concorrência)
 - [x] QR code não forjável (não pode ser um ID cru — precisa de assinatura/hash verificável)
 - [x] Geração de link compartilhável do ingresso
-- [ ] Validação de ingresso impedindo reuso
+- [x] Validação de ingresso impedindo reuso
 
 ### Fora de escopo (explícito no desafio — não implementar)
 Nota fiscal, revenda entre usuários, aplicativo nativo, recuperação de senha, envio de ingresso por e-mail.
@@ -498,6 +498,16 @@ Estilo visual: **neo-brutalismo** — sem `border-radius`, bordas sólidas de 2p
 
 **Porquê**: o recrutador precisa conseguir testar o sistema rapidamente, sem abrir `seed.ts` nem adivinhar credenciais. Como são contas de seed para ambiente de avaliação/desenvolvimento, deixá-las explícitas no README melhora a testabilidade e reduz fricção. Em produção real, essas senhas não existiriam como credenciais públicas.
 
+### 4.44 Módulo de Portaria
+
+**Decisão**: criado o `GateModule` no backend, com `POST /gate/validate` protegido por `JwtAuthGuard` + `RolesGuard` e restrito ao papel `GATE`. A validação recebe o `qrToken` do ingresso e um `sessionId` opcional para checar se o ingresso pertence à sessão esperada. A primeira validação válida marca o ticket como `USED`; novas tentativas retornam `ALREADY_USED`. Token inválido/expirado retorna `INVALID`; token válido de outra sessão retorna `WRONG_EVENT`.
+
+**Ajuste no schema**: `ValidationLog.ticketId` passou a ser opcional. Sem isso, uma tentativa com QR completamente inválido não poderia ser registrada, porque não existe `Ticket` associado para preencher a foreign key.
+
+**Frontend**: criada a rota `/gate`, disponível para a conta de portaria. A tela permite colar o token manualmente e também tenta leitura via câmera usando a API nativa `BarcodeDetector` quando o navegador suporta. Se o navegador não tiver suporte, o fluxo manual continua funcionando.
+
+**Porquê**: a Portaria fecha o ciclo do desafio: ingresso não forjável → validação → bloqueio de reuso → registro de auditoria. O endpoint centraliza a regra no backend para não depender da UI; a tela é só uma camada operacional para o recrutador testar.
+
 ---
 
 ## 5. Requisitos de entrega
@@ -537,7 +547,9 @@ Estilo visual: **neo-brutalismo** — sem `border-radius`, bordas sólidas de 2p
 - [ ] Frontend de Salas/Sessões: gerenciamento/cancelamento de sessões pelo organizador
 - [x] ~~Frontend de Reserva/Ingresso: mapa de assentos, pagamento simulado e tela pública do ticket~~ — feito, ver seção 4.42
 - [x] ~~Documentar contas de teste para o recrutador~~ — feito, ver seção 4.43
-- [ ] Módulo de Portaria: validação do QR, bloqueio de reuso e registro em `ValidationLog`
+- [x] ~~Módulo de Portaria: validação do QR, bloqueio de reuso e registro em `ValidationLog`~~ — feito, ver seção 4.44
+- [ ] Deploy (Vercel + Render) e variáveis de ambiente de produção
+- [ ] Revisão final do README com links públicos e lista do que ficou fora/pendente
 
 ---
 
@@ -559,3 +571,4 @@ Estilo visual: **neo-brutalismo** — sem `border-radius`, bordas sólidas de 2p
 | 21/08/2026 | Backend de Salas/Sessões concluído e commitado: seed de sala/assentos, `SessionsModule`, conflito de horário, cancelamento, status `FINISHED` calculado, `roomId` implícito, fallback de 120 minutos e vínculo entre TMDb e `Movie` local via upsert (4.34 a 4.37). Backend de Reserva/Ingresso concluído e commitado: `ReservationsModule`, reserva `PENDING`, pagamento simulado, ticket público, QR/JWT com expiração no fim da sessão, liberação on-the-fly de reservas expiradas e teste manual completo (4.38). |
 | 21/08/2026 | Frontend de Salas/Sessões iniciado: componentes reutilizáveis criados (`Cabecalho`, `Rodape`, `Container`, `Cartao`, `Botao`, `CampoTexto`, `Aviso`, `CartaoFilme`), telas existentes refatoradas para usar a base visual, `/admin/sessions/new` implementada para criação de sessões por ADMIN, detalhes do filme exibindo sessões futuras, e script `npm run dev` do frontend fixado na porta 3001 para evitar conflito com o backend na 3000 (4.39/4.40). Uso de IA atualizado: migração de Claude Sonnet para ChatGPT Codex documentada por limitações de crédito e pela vantagem de acesso direto ao workspace (4.41). |
 | 21/08/2026 | Frontend de Reserva/Ingresso implementado: `GET /sessions/:id` passou a retornar assentos e ocupação; rota `/sessions/[id]` criada com mapa de assentos, criação de reserva `PENDING` e pagamento simulado; rota `/tickets/[id]` criada com ticket público e QR code real via `qrcode` (4.42). README atualizado com contas de teste do seed e roteiro rápido para o recrutador validar organizador → cliente → ticket (4.43). |
+| 21/08/2026 | Módulo de Portaria implementado: backend `GateModule` com `POST /gate/validate` restrito a `GATE`, validação de QR assinado, retorno `VALID`/`INVALID`/`ALREADY_USED`/`WRONG_EVENT`, marcação do ticket como `USED`, registro em `ValidationLog` e migration para permitir log de token inválido sem ticket associado. Frontend `/gate` criado com digitação manual e leitura por câmera via `BarcodeDetector` quando disponível (4.44). |

@@ -5,6 +5,7 @@ import { notFound } from 'next/navigation';
 import { getMovieDetails, getSessions } from '../../services/api';
 import { Container } from '../../components/ui/Container';
 import { Cartao } from '../../components/ui/Cartao';
+import { BotaoTrailer } from '../../components/movies/BotaoTrailer';
 
 type MovieDetailsPageProps = {
   params: Promise<{ id: string }>;
@@ -39,7 +40,7 @@ export default async function MovieDetailsPage({
 
       <Container className="grid flex-1 gap-8 pb-12 lg:grid-cols-[320px_1fr]">
         <div className="mx-auto w-full max-w-xs shrink-0 sm:mx-0">
-          <Cartao className="relative aspect-[2/3] w-full overflow-hidden">
+          <Cartao className="relative aspect-2/3 w-full overflow-hidden">
             {movie.posterUrl ? (
               <Image
                 src={movie.posterUrl}
@@ -58,9 +59,17 @@ export default async function MovieDetailsPage({
         </div>
 
         <div>
-          <h1 className="text-3xl font-black uppercase tracking-wide text-white sm:text-4xl">
-            {movie.title}
-          </h1>
+          <div className="flex flex-wrap items-start justify-between gap-4">
+            <h1 className="text-3xl font-black uppercase tracking-wide text-white sm:text-4xl">
+              {movie.title}
+            </h1>
+
+            {/* Só aparece quando o TMDb tem trailer cadastrado — não vale
+                a pena mostrar um botão que leva a "vídeo indisponível". */}
+            {movie.trailerKey && (
+              <BotaoTrailer trailerKey={movie.trailerKey} titulo={movie.title} />
+            )}
+          </div>
 
           <div className="mt-3 flex flex-wrap items-center gap-3 text-sm text-white/50">
             {movie.releaseDate && <span>{movie.releaseDate.slice(0, 4)}</span>}

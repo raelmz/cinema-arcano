@@ -80,6 +80,7 @@ export type Movie = {
 export type MovieDetails = Movie & {
   runtime: number;
   genres: string[];
+  trailerKey: string | null; 
 };
 
 export type Sessao = {

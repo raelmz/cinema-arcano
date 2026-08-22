@@ -2,7 +2,7 @@
 'use client';
 
 import Link from 'next/link';
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useState, type CSSProperties } from 'react';
 import { AcessoRestrito } from '../../components/ui/AcessoRestrito';
 import { Aviso } from '../../components/ui/Aviso';
 import { Botao } from '../../components/ui/Botao';
@@ -20,6 +20,11 @@ const labelsStatus = {
   CANCELLED: 'Cancelada',
   FINISHED: 'Finalizada',
 };
+
+const acentoOrganizador = {
+  '--color-arcano-main': '#c084fc',
+  '--color-arcano-sec': '#581c87',
+} as CSSProperties;
 
 function formatarData(data: string) {
   return new Intl.DateTimeFormat('pt-BR', {
@@ -123,134 +128,136 @@ export default function AdminSessionsPage() {
   }
 
   return (
-    <Container className="py-8">
-      <section className="mb-8 flex flex-col gap-4 border-b-2 border-white/10 pb-6 md:flex-row md:items-end md:justify-between">
-        <div>
-          <p className="font-mono text-sm uppercase tracking-wide text-arcano-main">
-            Organizador
-          </p>
-          <h1 className="mt-2 text-3xl font-black uppercase tracking-wide text-white md:text-5xl">
-            Minhas sessões
-          </h1>
-        </div>
-
-        <Link
-          href="/admin/sessions/new"
-          className="border-2 border-arcano-main bg-arcano-main px-4 py-3 text-center text-sm font-bold uppercase tracking-wide text-arcano-bg hover:bg-arcano-ter"
-        >
-          Nova sessão
-        </Link>
-      </section>
-
-      <div className="mb-6 grid gap-3 sm:grid-cols-4">
-        {[
-          ['Total', resumo.total],
-          ['Agendadas', resumo.agendadas],
-          ['Canceladas', resumo.canceladas],
-          ['Finalizadas', resumo.finalizadas],
-        ].map(([label, valor]) => (
-          <Cartao key={label} className="p-4">
-            <p className="font-mono text-xs uppercase tracking-wide text-white/45">
-              {label}
+    <main style={acentoOrganizador}>
+      <Container className="py-8">
+        <section className="mb-8 flex flex-col gap-4 border-b-2 border-white/10 pb-6 md:flex-row md:items-end md:justify-between">
+          <div>
+            <p className="font-mono text-sm uppercase tracking-wide text-arcano-main">
+              Organizador
             </p>
-            <p className="mt-2 text-3xl font-black text-arcano-main">{valor}</p>
-          </Cartao>
-        ))}
-      </div>
+            <h1 className="mt-2 text-3xl font-black uppercase tracking-wide text-white md:text-5xl">
+              Minhas sessões
+            </h1>
+          </div>
 
-      {erro && (
-        <div className="mb-5">
-          <Aviso tipo="erro">{erro}</Aviso>
-        </div>
-      )}
+          <Link
+            href="/admin/sessions/new"
+            className="border-2 border-arcano-main bg-arcano-main px-4 py-3 text-center text-sm font-bold uppercase tracking-wide text-arcano-bg hover:bg-arcano-ter"
+          >
+            Nova sessão
+          </Link>
+        </section>
 
-      {sucesso && (
-        <div className="mb-5">
-          <Aviso tipo="sucesso">{sucesso}</Aviso>
-        </div>
-      )}
-
-      {carregando && (
-        <div className="space-y-4">
-          {Array.from({ length: 3 }).map((_, index) => (
-            <Cartao key={index} className="h-32 animate-pulse bg-white/[0.04]" />
+        <div className="mb-6 grid gap-3 sm:grid-cols-4">
+          {[
+            ['Total', resumo.total],
+            ['Agendadas', resumo.agendadas],
+            ['Canceladas', resumo.canceladas],
+            ['Finalizadas', resumo.finalizadas],
+          ].map(([label, valor]) => (
+            <Cartao key={label} className="p-4">
+              <p className="font-mono text-xs uppercase tracking-wide text-white/45">
+                {label}
+              </p>
+              <p className="mt-2 text-3xl font-black text-arcano-main">{valor}</p>
+            </Cartao>
           ))}
         </div>
-      )}
 
-      {!carregando && sessoes.length === 0 && (
-        <Cartao className="p-6">
-          <p className="text-white/60">Nenhuma sessão criada ainda.</p>
-        </Cartao>
-      )}
+        {erro && (
+          <div className="mb-5">
+            <Aviso tipo="erro">{erro}</Aviso>
+          </div>
+        )}
 
-      <div className="space-y-4">
-        {sessoes.map((sessao) => (
-          <Cartao key={sessao.id} className="p-5">
-            <div className="flex flex-col gap-5 lg:flex-row lg:items-center lg:justify-between">
-              <div className="min-w-0">
-                <div className="mb-2 flex flex-wrap items-center gap-2">
-                  <span className="border-2 border-white/15 px-2 py-1 font-mono text-xs uppercase text-white/55">
-                    {labelsStatus[sessao.status]}
-                  </span>
-                  <span className="border-2 border-arcano-main px-2 py-1 font-mono text-xs uppercase text-arcano-main">
-                    {formatarMoeda(sessao.price)}
-                  </span>
-                </div>
-                <h2 className="break-words text-xl font-black leading-tight text-white">
-                  {sessao.movie.title}
-                </h2>
-                <p className="mt-1 text-sm text-white/55">
-                  {formatarData(sessao.startTime)} · {sessao.room.name}
-                </p>
-              </div>
+        {sucesso && (
+          <div className="mb-5">
+            <Aviso tipo="sucesso">{sucesso}</Aviso>
+          </div>
+        )}
 
-              <dl className="grid w-full grid-cols-3 gap-3 text-center lg:w-auto lg:min-w-72">
-                <div className="border-2 border-white/10 p-3">
-                  <dt className="font-mono text-[10px] uppercase text-white/40">
-                    Reservas
-                  </dt>
-                  <dd className="mt-1 text-xl font-black text-white">
-                    {sessao.reservationsCount}
-                  </dd>
-                </div>
-                <div className="border-2 border-white/10 p-3">
-                  <dt className="font-mono text-[10px] uppercase text-white/40">
-                    Ocupados
-                  </dt>
-                  <dd className="mt-1 text-xl font-black text-white">
-                    {sessao.reservedSeatsCount}
-                  </dd>
-                </div>
-                <div className="border-2 border-white/10 p-3">
-                  <dt className="font-mono text-[10px] uppercase text-white/40">
-                    Vendidos
-                  </dt>
-                  <dd className="mt-1 text-xl font-black text-white">
-                    {sessao.soldSeatsCount}
-                  </dd>
-                </div>
-              </dl>
+        {carregando && (
+          <div className="space-y-4">
+            {Array.from({ length: 3 }).map((_, index) => (
+              <Cartao key={index} className="h-32 animate-pulse bg-white/[0.04]" />
+            ))}
+          </div>
+        )}
 
-              <div className="grid gap-3 sm:grid-cols-2 lg:flex lg:flex-wrap">
-                <Link
-                  href={`/sessions/${sessao.id}`}
-                  className="inline-flex items-center justify-center border-2 border-white/20 px-4 py-3 text-center text-sm font-bold uppercase tracking-wide text-white/70 hover:border-arcano-main hover:text-arcano-main"
-                >
-                  Ver mapa
-                </Link>
-                <Botao
-                  variante="secundario"
-                  disabled={sessao.status !== 'SCHEDULED' || cancelandoId === sessao.id}
-                  onClick={() => cancelar(sessao)}
-                >
-                  {cancelandoId === sessao.id ? 'Cancelando...' : 'Cancelar'}
-                </Botao>
-              </div>
-            </div>
+        {!carregando && sessoes.length === 0 && (
+          <Cartao className="p-6">
+            <p className="text-white/60">Nenhuma sessão criada ainda.</p>
           </Cartao>
-        ))}
-      </div>
-    </Container>
+        )}
+
+        <div className="space-y-4">
+          {sessoes.map((sessao) => (
+            <Cartao key={sessao.id} className="p-5">
+              <div className="flex flex-col gap-5 lg:flex-row lg:items-center lg:justify-between">
+                <div className="min-w-0">
+                  <div className="mb-2 flex flex-wrap items-center gap-2">
+                    <span className="border-2 border-white/15 px-2 py-1 font-mono text-xs uppercase text-white/55">
+                      {labelsStatus[sessao.status]}
+                    </span>
+                    <span className="border-2 border-arcano-main px-2 py-1 font-mono text-xs uppercase text-arcano-main">
+                      {formatarMoeda(sessao.price)}
+                    </span>
+                  </div>
+                  <h2 className="break-words text-xl font-black leading-tight text-white">
+                    {sessao.movie.title}
+                  </h2>
+                  <p className="mt-1 text-sm text-white/55">
+                    {formatarData(sessao.startTime)} · {sessao.room.name}
+                  </p>
+                </div>
+
+                <dl className="grid w-full grid-cols-3 gap-3 text-center lg:w-auto lg:min-w-72">
+                  <div className="border-2 border-white/10 p-3">
+                    <dt className="font-mono text-[10px] uppercase text-white/40">
+                      Reservas
+                    </dt>
+                    <dd className="mt-1 text-xl font-black text-white">
+                      {sessao.reservationsCount}
+                    </dd>
+                  </div>
+                  <div className="border-2 border-white/10 p-3">
+                    <dt className="font-mono text-[10px] uppercase text-white/40">
+                      Ocupados
+                    </dt>
+                    <dd className="mt-1 text-xl font-black text-white">
+                      {sessao.reservedSeatsCount}
+                    </dd>
+                  </div>
+                  <div className="border-2 border-white/10 p-3">
+                    <dt className="font-mono text-[10px] uppercase text-white/40">
+                      Vendidos
+                    </dt>
+                    <dd className="mt-1 text-xl font-black text-white">
+                      {sessao.soldSeatsCount}
+                    </dd>
+                  </div>
+                </dl>
+
+                <div className="grid gap-3 sm:grid-cols-2 lg:flex lg:flex-wrap">
+                  <Link
+                    href={`/sessions/${sessao.id}`}
+                    className="inline-flex items-center justify-center border-2 border-white/20 px-4 py-3 text-center text-sm font-bold uppercase tracking-wide text-white/70 hover:border-arcano-main hover:text-arcano-main"
+                  >
+                    Ver mapa
+                  </Link>
+                  <Botao
+                    variante="secundario"
+                    disabled={sessao.status !== 'SCHEDULED' || cancelandoId === sessao.id}
+                    onClick={() => cancelar(sessao)}
+                  >
+                    {cancelandoId === sessao.id ? 'Cancelando...' : 'Cancelar'}
+                  </Botao>
+                </div>
+              </div>
+            </Cartao>
+          ))}
+        </div>
+      </Container>
+    </main>
   );
 }

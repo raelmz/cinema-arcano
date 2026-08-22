@@ -6,6 +6,7 @@ import { useParams, useRouter } from 'next/navigation';
 import { useEffect, useMemo, useState } from 'react';
 import { AcessoRestrito } from '../../../components/ui/AcessoRestrito';
 import { Aviso } from '../../../components/ui/Aviso';
+import { BandeiraPagamento } from '../../../components/ui/BandeiraPagamento';
 import { Botao } from '../../../components/ui/Botao';
 import { CampoTexto } from '../../../components/ui/CampoTexto';
 import { Cartao } from '../../../components/ui/Cartao';
@@ -71,6 +72,10 @@ export default function PaymentPage() {
     if (!reserva) return 0;
     return Number(reserva.session.price) * reserva.seats.length;
   }, [reserva]);
+
+  // Detecta a bandeira do cartão pelo primeiro dígito, só para exibição —
+  // não há validação real de bandeira nesta simulação de checkout.
+  const bandeiraCartao = numeroCartao.trim().startsWith('5') ? 'mastercard' : 'visa';
 
   async function finalizarPagamento(simularFalha: boolean) {
     if (!token || !reserva) {
@@ -171,6 +176,16 @@ export default function PaymentPage() {
               >
                 <span className="block font-mono text-xs uppercase">Cartão</span>
                 <span className="mt-2 block text-lg font-black">Crédito</span>
+                <span className="mt-3 flex flex-wrap gap-1.5">
+                  <BandeiraPagamento
+                    marca="visa"
+                    className={metodo === 'CARD' ? 'border-arcano-bg/40 text-arcano-bg' : ''}
+                  />
+                  <BandeiraPagamento
+                    marca="mastercard"
+                    className={metodo === 'CARD' ? 'border-arcano-bg/40 text-arcano-bg' : ''}
+                  />
+                </span>
               </button>
               <button
                 type="button"
@@ -181,8 +196,14 @@ export default function PaymentPage() {
                     : 'border-white/15 text-white hover:border-arcano-main'
                 }`}
               >
-                <span className="block font-mono text-xs uppercase">PIX</span>
+                <span className="block font-mono text-xs uppercase">Pix</span>
                 <span className="mt-2 block text-lg font-black">Instantâneo</span>
+                <span className="mt-3 flex flex-wrap gap-1.5">
+                  <BandeiraPagamento
+                    marca="pix"
+                    className={metodo === 'PIX' ? 'border-arcano-bg/40 text-arcano-bg' : ''}
+                  />
+                </span>
               </button>
             </div>
 
@@ -193,9 +214,7 @@ export default function PaymentPage() {
                     <span className="font-mono text-xs uppercase tracking-wide">
                       Cinema Arcano
                     </span>
-                    <span className="border-2 border-arcano-main px-2 py-1 text-xs font-black">
-                      VISA
-                    </span>
+                    <BandeiraPagamento marca={bandeiraCartao} className="border-white/40 text-white" />
                   </div>
                   <p className="mt-8 break-all font-mono text-lg font-black tracking-wide sm:text-xl">
                     {numeroCartao || '0000 0000 0000 0000'}
@@ -235,9 +254,12 @@ export default function PaymentPage() {
               </div>
             ) : (
               <div className="border-2 border-white/15 p-5">
-                <p className="font-mono text-xs uppercase tracking-wide text-white/45">
-                  Código PIX copia e cola
-                </p>
+                <div className="flex items-center justify-between gap-3">
+                  <p className="font-mono text-xs uppercase tracking-wide text-white/45">
+                    Código PIX copia e cola
+                  </p>
+                  <BandeiraPagamento marca="pix" />
+                </div>
                 <p className="mt-4 break-all border-2 border-arcano-main bg-arcano-main p-4 font-mono text-sm font-black text-arcano-bg">
                   00020126580014br.gov.bcb.pix0136cinema-arcano-reserva-{reserva.id}
                 </p>
@@ -285,6 +307,14 @@ export default function PaymentPage() {
               <p className="border-t-2 border-white/10 pt-4 text-3xl font-black text-arcano-main">
                 {formatarMoeda(total)}
               </p>
+            </div>
+            <div className="mt-6 flex flex-wrap items-center gap-2 border-t-2 border-white/10 pt-4">
+              <span className="font-mono text-[10px] uppercase tracking-widest text-white/35">
+                Aceitamos
+              </span>
+              <BandeiraPagamento marca="visa" />
+              <BandeiraPagamento marca="mastercard" />
+              <BandeiraPagamento marca="pix" />
             </div>
           </Cartao>
         </div>

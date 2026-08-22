@@ -6,6 +6,8 @@ import {
   TmdbMovie,
   TmdbMovieDetails,
   TmdbPaginatedResponse,
+  TmdbVideo,
+  TmdbVideosResponse,
 } from './interfaces/movie.interface';
 
 const TMDB_BASE_URL = 'https://api.themoviedb.org/3';
@@ -38,11 +40,40 @@ export class MoviesService {
   }
 
   async findOne(id: string): Promise<MovieDetails> {
-    const data = await this.fetchTmdb<TmdbMovieDetails>(`/movie/${id}`, {
-      language: 'pt-BR',
-    });
+    // Detalhes e trailer são chamadas separadas no TMDb — buscamos as duas
+    // em paralelo pra não dobrar a latência. Se o trailer falhar ou não
+    // existir, o filme ainda deve carregar normalmente (ver findTrailerKey).
+    const [data, trailerKey] = await Promise.all([
+      this.fetchTmdb<TmdbMovieDetails>(`/movie/${id}`, { language: 'pt-BR' }),
+      this.findTrailerKey(id),
+    ]);
 
-    return this.mapMovieDetails(data);
+    return this.mapMovieDetails(data, trailerKey);
+  }
+
+  private async findTrailerKey(id: string): Promise<string | null> {
+    // Vídeos em pt-BR costumam vir vazios no TMDb pra maioria dos filmes;
+    // por isso essa chamada não usa language, pegando o catálogo padrão
+    // (geralmente en-US), que tem cobertura bem maior de trailers.
+    const data = await this.fetchTmdb<TmdbVideosResponse>(
+      `/movie/${id}/videos`,
+    ).catch(() => null);
+
+    if (!data || data.results.length === 0) {
+      return null;
+    }
+
+    const trailers = data.results.filter(
+      (video) => video.site === 'YouTube' && video.type === 'Trailer',
+    );
+
+    if (trailers.length === 0) {
+      return null;
+    }
+
+    // Prioriza o trailer oficial quando existe mais de um.
+    const oficial = trailers.find((video) => video.official);
+    return (oficial ?? trailers[0]).key;
   }
 
   private async fetchTmdb<T>(
@@ -83,11 +114,15 @@ export class MoviesService {
     };
   }
 
-  private mapMovieDetails(movie: TmdbMovieDetails): MovieDetails {
+  private mapMovieDetails(
+    movie: TmdbMovieDetails,
+    trailerKey: string | null,
+  ): MovieDetails {
     return {
       ...this.mapMovie(movie),
       runtime: movie.runtime,
       genres: movie.genres.map((genre) => genre.name),
+      trailerKey,
     };
   }
 }

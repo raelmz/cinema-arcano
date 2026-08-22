@@ -13,6 +13,9 @@ export interface Movie {
 export interface MovieDetails extends Movie {
   runtime: number | null;
   genres: string[];
+  // Chave do vídeo no YouTube (o que vai em youtube.com/embed/{trailerKey}).
+  // null quando o TMDb não tem trailer cadastrado pro filme.
+  trailerKey: string | null;
 }
 
 // Formato bruto de retorno do TMDb (apenas os campos que consumimos)
@@ -35,4 +38,19 @@ export interface TmdbPaginatedResponse<T> {
   results: T[];
   total_pages: number;
   total_results: number;
+}
+
+// Resposta de GET /movie/{id}/videos
+export interface TmdbVideo {
+  id: string;
+  key: string; // ex: "dQw4w9WgXcQ" — o id do vídeo no YouTube
+  name: string;
+  site: 'YouTube' | 'Vimeo' | string;
+  type: 'Trailer' | 'Teaser' | 'Clip' | 'Featurette' | string;
+  official: boolean;
+}
+
+export interface TmdbVideosResponse {
+  id: number;
+  results: TmdbVideo[];
 }

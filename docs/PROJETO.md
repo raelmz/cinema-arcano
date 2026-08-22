@@ -4,7 +4,7 @@
 
 **Última atualização**: 21/08/2026
 **Autor**: Israel Menezes de Andrade
-**Status**: Módulos Auth, Catálogo, Salas/Sessões, Reserva/Ingresso e Portaria **implementados e testados manualmente no backend/frontend onde aplicável**. Deploy realizado: frontend em Vercel (`https://cinema-arcano.vercel.app`) e backend/PostgreSQL em Render (`https://cinema-arcano-api.onrender.com`). Frontend já possui componentes reutilizáveis, criação e gerenciamento de sessões pelo organizador, exibição de sessões futuras, mapa de assentos, reserva, checkout com cartão/PIX, pagamento aprovado/recusado, área de Meus ingressos, ticket público com QR code, tela de validação da portaria com câmera/fallback manual, 404 personalizada, estados globais de loading/erro, bloqueio visual por papel nas páginas privadas e primeira revisão de responsividade/acessibilidade. Próximo bloco principal: revisão visual premium final e validação ponta a ponta em produção.
+**Status**: Módulos Auth, Catálogo, Salas/Sessões, Reserva/Ingresso e Portaria **implementados e testados manualmente no backend/frontend onde aplicável**. Deploy realizado: frontend em Vercel (`https://cinema-arcano.vercel.app`) e backend/PostgreSQL em Render (`https://cinema-arcano-api.onrender.com`). Frontend possui componentes reutilizáveis, criação e gerenciamento de sessões pelo organizador, exibição de sessões futuras, mapa de assentos, reserva, checkout com cartão/PIX, pagamento aprovado/recusado, área de Meus ingressos, ticket público com QR code, tela de validação da portaria com câmera/fallback manual, 404 personalizada, estados globais de loading/erro, bloqueio visual por papel nas páginas privadas, revisão de responsividade/acessibilidade e polimento visual final. Próximo bloco principal: apenas entrega final, push e conferência do deploy.
 
 ---
 
@@ -481,9 +481,13 @@ Estilo visual: **neo-brutalismo** — sem `border-radius`, bordas sólidas de 2p
 
 ### 4.41 Ferramentas de IA usadas no processo
 
-**Decisão**: documentar explicitamente a mudança de ferramenta de IA ao longo do desenvolvimento. Comecei usando Claude Sonnet como apoio principal, com uma sessão pontual no Gemini Pro, e depois migrei para ChatGPT Codex por causa das limitações de crédito do plano gratuito do Claude. O Codex também está sendo usado em modo gratuito.
+**Decisão**: documentar explicitamente o uso de IA ao longo do desenvolvimento. Usei Claude Sonnet 5 como principal apoio de desenvolvimento, Gemini Pro pontualmente para alguns testes, e ChatGPT Codex 5.5 para revisão geral do projeto e ajuda na correção de falhas.
 
-**Porquê**: o desafio pede transparência sobre uso de IA, e essa troca afetou o fluxo de trabalho. O principal ganho do Codex neste projeto foi o acesso direto à pasta de trabalho: ler os arquivos reais, aplicar patches, rodar `lint`/`build`, verificar status do Git e manter o contexto local mais fiel reduziu retrabalho e consumo de tokens com cópias manuais de arquivo. Ainda assim, as decisões de produto e arquitetura continuam registradas e justificadas neste documento, em primeira pessoa.
+**Porquê**: o desafio pede transparência sobre uso de IA, então preferi registrar o processo com clareza. Como usei essas ferramentas nos planos gratuitos, e também por escolha própria, não terceirizei decisões técnicas, planejamento, escopo ou priorização para a IA. As decisões de produto e arquitetura continuam registradas e justificadas neste documento em primeira pessoa.
+
+**Design**: as decisões visuais foram guiadas pelo meu gosto pessoal, não por direção criativa terceirizada para IA. O Cinema Arcano usa uma estética neo-brutalista com paleta própria, bordas fortes, sombras duras e microcopy temática porque essa foi a identidade que eu quis defender para fugir de uma interface genérica.
+
+**Stack enxuta**: evitei propositalmente usar muitos frameworks ou soluções prontas. Isso foi uma escolha para demonstrar que entendo as peças que estou construindo e consigo criar a base do projeto do zero sem depender de ferramentas prontas. Não é uma rejeição a esse tipo de ferramenta em outros contextos — elas têm valor real para acelerar entregas —, mas neste desafio fez mais sentido mostrar o processo manual e o raciocínio por trás das escolhas.
 
 ### 4.42 Frontend de Reserva/Ingresso
 
@@ -562,6 +566,16 @@ Estilo visual: **neo-brutalismo** — sem `border-radius`, bordas sólidas de 2p
 
 **Porquê**: como o projeto será avaliado por um recrutador em ambiente real, responsividade e acessibilidade básica entram como parte da qualidade percebida. A intenção foi reforçar a robustez da experiência sem fazer uma reescrita visual grande antes da revisão premium final.
 
+### 4.50 Polimento visual final e entrega
+
+**Decisão**: a etapa final de UI manteve a identidade Cinema Arcano, mas reorganizou a experiência para ficar mais apresentável como produto: Home com destaque para sessões disponíveis, catálogo separado de filmes sem sessão publicada, filtros simples de catálogo, cards de sessão, trailer no detalhe do filme quando disponível no TMDb, ticket com visual de canhoto, portaria com resultado mais destacado e páginas institucionais `/sobre`, `/contato` e `/termos`.
+
+**Backend do catálogo**: o detalhe de filme passou a buscar também vídeos do TMDb para expor `trailerKey` quando houver trailer no YouTube. A falha ou ausência de trailer não bloqueia o carregamento do filme.
+
+**Organização final**: removi assets padrão não usados do `create-next-app`, mantive apenas os assets reais do projeto (`logo.png`, bandeiras de pagamento e favicon), limpei comentários visuais que eram apenas bastidor de implementação e rodei validações finais de build/lint/test.
+
+**Porquê**: o desafio avalia um fluxo funcional completo, mas também penaliza aparência genérica. Essa etapa final melhora a percepção de acabamento sem mudar contratos principais da API nem adicionar complexidade estrutural fora do escopo.
+
 ---
 
 ## 5. Requisitos de entrega
@@ -609,7 +623,8 @@ Estilo visual: **neo-brutalismo** — sem `border-radius`, bordas sólidas de 2p
 - [x] ~~Deploy (Vercel + Render) e variáveis de ambiente de produção~~ — feito, ver seção 4.48
 - [x] ~~Revisão final do README com links públicos~~ — feito, ver seção 4.48
 - [x] ~~Primeira revisão de responsividade/acessibilidade e estados visuais por tela~~ — feito, ver seção 4.49
-- [ ] Polimento visual premium final
+- [x] ~~Polimento visual premium final~~ — feito, ver seção 4.50
+- [x] ~~Revisão final de build/lint/test antes da entrega~~ — feito, ver seção 4.50
 
 ---
 
@@ -637,3 +652,4 @@ Estilo visual: **neo-brutalismo** — sem `border-radius`, bordas sólidas de 2p
 | 21/08/2026 | Ajustes de produção antes da entrega: portaria trocada para `html5-qrcode`, ticket exibe token copiável para validação manual, páginas privadas usam `AcessoRestrito` em vez de redirecionamento silencioso, e backend permite validação por `GATE` ou `ADMIN` (4.47). |
 | 21/08/2026 | Deploy realizado: backend/PostgreSQL no Render, frontend na Vercel, seed de produção confirmado via login, CORS de produção configurado com `FRONTEND_URL`, e README atualizado com links públicos e roteiro de teste em produção (4.48). |
 | 21/08/2026 | Primeira revisão de responsividade/acessibilidade aplicada no frontend: skip link, foco visível, avisos com roles semânticas, skeletons em telas principais, ajustes mobile no QR/ticket, checkout, portaria, mapa de assentos, reservas e gerenciamento de sessões (4.49). |
+| 22/08/2026 | Polimento visual final concluído: Home premium com sessões em destaque, filtros de catálogo, trailers via TMDb, ticket com visual de canhoto, portaria refinada, páginas institucionais e limpeza de assets/comentários. README e documentação de uso de IA atualizados para entrega (4.50). |

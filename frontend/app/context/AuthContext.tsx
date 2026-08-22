@@ -5,6 +5,7 @@ import {
   createContext,
   useContext,
   useState,
+  useEffect,
   ReactNode,
 } from 'react';
 import type { Usuario } from '../services/api';
@@ -19,11 +20,9 @@ type AuthContextType = {
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-function getStoredSession(): { token: string | null; user: Usuario | null } {
-  if (typeof window === 'undefined') {
-    return { token: null, user: null };
-  }
+type Session = { token: string | null; user: Usuario | null };
 
+function getStoredSession(): Session {
   const storedToken = localStorage.getItem('arcano_token');
   const storedUser = localStorage.getItem('arcano_user');
 
@@ -41,7 +40,18 @@ function getStoredSession(): { token: string | null; user: Usuario | null } {
 }
 
 export function AuthProvider({ children }: { children: ReactNode }) {
-  const [session, setSession] = useState(getStoredSession);
+  // Estado inicial precisa ser IDÊNTICO no server e no client (sessão vazia,
+  // carregando). Só depois de montar no client é que olhamos o localStorage —
+  // isso evita o mismatch de hydration entre "Entrar" e "Meus Ingressos".
+  const [session, setSession] = useState<Session>({ token: null, user: null });
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    queueMicrotask(() => {
+      setSession(getStoredSession());
+      setIsLoading(false);
+    });
+  }, []);
 
   const login = (newToken: string, newUser: Usuario) => {
     localStorage.setItem('arcano_token', newToken);
@@ -62,7 +72,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         token: session.token,
         login,
         logout,
-        isLoading: false,
+        isLoading,
       }}
     >
       {children}

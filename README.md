@@ -43,6 +43,7 @@ Documentação completa do processo de decisão — requisitos, arquitetura, tra
 - ✅ Páginas privadas com bloqueio visual por papel
 - ✅ Deploy (Vercel + Render)
 - ✅ Primeira revisão de responsividade, acessibilidade e estados visuais
+- ✅ Polimento visual final com Home premium, trailers, filtros e páginas institucionais
 
 ## Links de produção
 
@@ -123,13 +124,18 @@ Após rodar o seed (`npx prisma db seed`), estas contas ficam disponíveis para 
 7. Reabra seus tickets em `/reservations`.
 8. Entre como portaria ou admin em `/gate`, cole o token do QR ou use a câmera, e valide o ingresso.
 9. Valide o mesmo ingresso novamente para confirmar o retorno de ingresso já utilizado.
+10. Navegue por `/sobre`, `/contato` e `/termos` para conferir as páginas institucionais finais.
 
 <img src="https://capsule-render.vercel.app/api?type=rect&color=0F6E56&height=3&section=header" width="100%" />
 
 ## Uso de IA neste projeto
 
-Este projeto foi desenvolvido com apoio de IA para organização de ideias, revisão de trade-offs, geração de código de apoio e documentação. Todas as decisões de produto e arquitetura são registradas com justificativa própria em [`docs/PROJETO.md`](./docs/PROJETO.md) — não apenas o resultado final, mas o porquê de cada escolha.
+Este projeto foi desenvolvido com apoio de IA para organização de ideias, revisão de trade-offs, geração de código de apoio, revisão geral e documentação. Todas as decisões de produto e arquitetura são registradas com justificativa própria em [`docs/PROJETO.md`](./docs/PROJETO.md) — não apenas o resultado final, mas o porquê de cada escolha.
 
-Durante o desenvolvimento usei principalmente Claude Sonnet e, depois, migrei para ChatGPT Codex por limitações de crédito no plano gratuito do Claude. Também estou usando o Codex no modo gratuito, mas o acesso direto à pasta de trabalho do projeto reduziu retrabalho e chamadas desnecessárias: a ferramenta consegue ler os arquivos reais do repositório, aplicar alterações locais, rodar `lint`/`build` e manter o contexto de continuidade mais fiel ao estado atual do código.
+Usei Claude Sonnet 5 como principal apoio de desenvolvimento, Gemini Pro pontualmente para alguns testes e ChatGPT Codex 5.5 para revisão geral do projeto e ajuda na correção de falhas. Como usei essas ferramentas em planos gratuitos, e também por escolha própria, não terceirizei planejamento nem decisões técnicas para IA: as decisões de arquitetura, escopo, produto e priorização foram minhas.
+
+As decisões de design e identidade visual também foram guiadas pelo meu gosto pessoal. Usei IA como apoio operacional, mas o visual do Cinema Arcano — paleta, tom, estética neo-brutalista e direção de interface — foi definido por mim.
+
+Também evitei propositalmente depender de muitos frameworks ou soluções prontas. Mantive o projeto enxuto para demonstrar que entendo o que estou construindo e consigo criar as peças principais do zero quando isso faz sentido. Isso não significa rejeitar ferramentas prontas em outros contextos; elas têm muito valor para acelerar entregas. Neste desafio, preferi mostrar o processo manual e as decisões por trás da implementação.
 
 <img src="https://capsule-render.vercel.app/api?type=rect&color=0:0F6E56,100:173404&height=100&section=footer" width="100%" />

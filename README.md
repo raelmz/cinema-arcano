@@ -5,7 +5,7 @@
 ### Plataforma de eventos e ingressos com identidade própria
 
 [![Status](https://img.shields.io/badge/Status-Deploy_realizado-0F6E56?style=flat-square)](#status)
-[![Prazo](https://img.shields.io/badge/Entrega-25%2F08%2F2026-173404?style=flat-square)](#status)
+[![Entrega](https://img.shields.io/badge/Entregue-22%2F08%2F2026-173404?style=flat-square)](#status)
 [![Processo](https://img.shields.io/badge/Elite_Dev-Verzel-444441?style=flat-square)](#sobre)
 
 </div>
@@ -23,7 +23,7 @@ Documentação completa do processo de decisão — requisitos, arquitetura, tra
 <a id="status"></a>
 ## Status
 
-🚀 **Deploy realizado** — projeto iniciado em 19/08/2026, entrega em 25/08/2026.
+🚀 **Projeto entregue** — desenvolvido de 19/08/2026 a 22/08/2026, 3 dias antes do prazo final (25/08/2026).
 
 - ✅ Monorepo estruturado (`frontend/` + `backend/`)
 - ✅ Banco local (PostgreSQL 16 via Docker Compose) rodando, schema migrado (10 tabelas)
@@ -50,7 +50,7 @@ Documentação completa do processo de decisão — requisitos, arquitetura, tra
 - Frontend: [https://cinema-arcano.vercel.app](https://cinema-arcano.vercel.app)
 - Backend: [https://cinema-arcano-api.onrender.com](https://cinema-arcano-api.onrender.com)
 
-> O backend está no free tier do Render. A primeira requisição após um período de inatividade pode demorar por causa do cold start.
+> O backend está no free tier do Render. A primeira requisição após um período de inatividade pode demorar por causa do cold start; a Home exibe um aviso temático quando isso acontece.
 
 Plano dia-a-dia detalhado em [`docs/PROJETO.md`](./docs/PROJETO.md#413-fluxo-de-desenvolvimento-e-plano-dia-a-dia).
 
@@ -98,7 +98,7 @@ npx prisma migrate dev      # aplica o schema ao banco
 npx prisma db seed          # cria usuários iniciais (1 organizador, 2 clientes, 1 portaria)
 ```
 
-_Instruções de setup completas de ponta a ponta serão consolidadas aqui conforme o projeto avança._
+Instruções de setup completas (variáveis de ambiente, migrations, TMDb API key) estão em cada README de pacote.
 
 <img src="https://capsule-render.vercel.app/api?type=rect&color=0F6E56&height=3&section=header" width="100%" />
 

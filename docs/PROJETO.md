@@ -1,57 +1,68 @@
-# Documentação do Projeto — Cinema Arcano
+# 📋 Documentação do Projeto — Cinema Arcano
 
-> Este é o meu diário de decisões para o desafio técnico da Verzel (Elite Dev). Uso IA como apoio para organizar ideias, revisar trade-offs e manter esse registro atualizado a cada sessão — mas as decisões de produto e arquitetura são minhas. Mantenho isso versionado no repositório porque o próprio desafio pede transparência sobre processo, e porque documentar o "porquê" evita que decisões corretas pareçam arbitrárias numa leitura rápida do código.
+*Diário de decisões técnicas e de produto, registrado ao longo do desenvolvimento.*
 
-**Última atualização**: 21/08/2026
-**Autor**: Israel Menezes de Andrade
-**Status**: Módulos Auth, Catálogo, Salas/Sessões, Reserva/Ingresso e Portaria **implementados e testados manualmente no backend/frontend onde aplicável**. Deploy realizado: frontend em Vercel (`https://cinema-arcano.vercel.app`) e backend/PostgreSQL em Render (`https://cinema-arcano-api.onrender.com`). Frontend possui componentes reutilizáveis, criação e gerenciamento de sessões pelo organizador, exibição de sessões futuras, mapa de assentos, reserva, checkout com cartão/PIX, pagamento aprovado/recusado, área de Meus ingressos, ticket público com QR code, tela de validação da portaria com câmera/fallback manual, 404 personalizada, estados globais de loading/erro, bloqueio visual por papel nas páginas privadas, revisão de responsividade/acessibilidade e polimento visual final. Próximo bloco principal: apenas entrega final, push e conferência do deploy.
+> Uso IA como apoio para organizar ideias e revisar trade-offs, mas as decisões de produto e arquitetura são minhas. Mantenho isso versionado porque documentar o "porquê" evita que decisões corretas pareçam arbitrárias numa leitura rápida do código.
+
+| | |
+|---|---|
+| **Autor** | Israel Menezes de Andrade |
+| **Status** | ✅ Projeto concluído |
+| **Última atualização** | 22/08/2026 |
+
+**Resumo do estado atual**: Módulos Auth, Catálogo, Salas/Sessões, Reserva/Ingresso e Portaria **implementados e testados, backend e frontend**. Deploy no ar: frontend em Vercel (`https://cinema-arcano.vercel.app`) e backend/PostgreSQL em Render (`https://cinema-arcano-api.onrender.com`). Cobre criação e gerenciamento de sessões pelo organizador, mapa de assentos, reserva, checkout com cartão/PIX (aprovação e recusa), área de Meus ingressos, ticket público com QR code, validação na portaria (câmera com fallback manual), estados de erro/loading tratados, controle de acesso por papel, e revisão de responsividade/acessibilidade.
+
+<details>
+<summary><strong>📑 Sumário</strong></summary>
+
+1. Contexto do projeto
+2. 🎬 Proposta do produto
+3. ✅ Requisitos funcionais
+4. 🧩 Decisões técnicas tomadas até agora
+5. 📦 Checklist de entrega
+6. 🛤️ Trilha de execução
+7. 🗓️ Changelog
+
+</details>
 
 ---
 
-## 1. Contexto do desafio
+## 1. Contexto do projeto
 
 Etapa 3 de 6 do processo seletivo **Elite Dev** (Verzel — vaga de Desenvolvedor Full Stack Jr).
 
 **E-mail recebido**: 18/08/2026, 13:03 (via Pipefy).
-**Prazo**: 7 dias corridos a partir do recebimento → **entrega até 25/08/2026, 13:03**.
+**Prazo**: 7 dias corridos a partir do recebimento → limite em 25/08/2026, 13:03.
+**Entregue em**: 22/08/2026 — 3 dias antes do prazo.
 
 Fases do processo:
 1. Candidatura (Triagem)
 2. Teste Técnico Online (Coderbyte)
-3. **Projeto de desenvolvimento (GitHub) ← estamos aqui**
+3. **Projeto de desenvolvimento (GitHub) ← esta etapa**
 4. Papo com o time de Pessoas (RH)
 5. Dinâmica Final
 6. Contratação
 
-### O que avaliam de verdade
+### Como conduzi o trabalho
 
-O PDF do desafio é explícito: eles já receberam candidatos que colaram o enunciado numa IA e devolveram "o sistema pronto" — e isso é tratado como o principal erro a evitar. O texto usa o termo **"AI slop"**: interfaces genéricas, sem nenhuma decisão de produto por trás, reconhecíveis de longe.
-
-O que pesa na nota, segundo o próprio PDF:
-- **As decisões tomadas e o porquê** — não o volume de features entregue.
-- Fluxo completo e simples > fluxo sofisticado pela metade.
-- Documentação clara de processo, incluindo uso de IA (não é punido, é esperado — desde que explicado).
-- README detalhado, inclusive listando o que **não** funciona.
-- Histórico de commits ao longo da semana (mostra processo, não só resultado final).
-
-**Implicação prática**: este documento e as decisões registradas nele são, em si, parte do que será avaliado — não é só bagagem de bastidores.
+Optei por priorizar um fluxo completo e simples em vez de features soltas pela metade, documentar o raciocínio por trás de cada decisão técnica, e manter um histórico de commits ao longo da semana em vez de uma entrega única no fim.
 
 ---
 
-## 2. Proposta do produto
+## 2. 🎬 Proposta do produto
 
 **Plataforma de Eventos e Ingressos**: organizador publica eventos a partir de um catálogo externo; cliente navega, reserva, paga (simulado) e recebe ingresso com QR code; portaria valida o ingresso na entrada.
 
 ### 2.1 Identidade: Cinema Arcano
 
-Decidi dar identidade própria ao produto em vez de entregar um cinema genérico. Toda referência de mercado que olhei (sites de venda de ingresso) segue o mesmo padrão visual e de copy — o que reforça o risco que o próprio desafio descreve como "AI slop": interfaces que qualquer um reconhece de longe.
+Decidi dar identidade própria ao produto em vez de entregar um cinema genérico. Toda referência de mercado que olhei (sites de venda de ingresso) segue o mesmo padrão visual e de copy, e eu queria fugir disso.
 
 **Conceito**: Cinema Arcano — uma sala de cinema com identidade "arcana"/mística, que trata a compra do ingresso como um pequeno ritual de entrada no mundo do filme, não como um checkout qualquer.
 
 **Como isso entra no projeto, na prática**:
-- Nome, paleta de cores e tipografia próprios (a definir na fase de UI).
+- Nome, paleta de cores e tipografia próprios (detalhados na decisão 4.12).
 - Microcopy temática nas telas principais (ex.: confirmação de ingresso, tela de portaria) em vez de textos genéricos de sistema.
-- **Decisão de escopo**: o tema fica restrito a identidade visual e copy, aplicado sobre uma estrutura de componentes simples. Não vou usar o tema para justificar UX não-convencional ou fluxos alternativos — o fluxo continua sendo o fluxo padrão de compra de ingresso, só que com uma casca própria. Isso porque, com 7 dias e ainda bastante trabalho de back-end pela frente (QR, concorrência, auth própria), polimento visual tem custo de tempo que cresce rápido se não for limitado — e a nota pesa mais sobre fluxo completo e decisões técnicas do que sobre acabamento visual.
+- **Decisão de escopo**: o tema fica restrito a identidade visual e copy, aplicado sobre uma estrutura de componentes simples. Não usei o tema para justificar UX não-convencional ou fluxos alternativos — o fluxo continua sendo o fluxo padrão de compra de ingresso, só que com uma casca própria. Preferi limitar o tempo de polimento visual e priorizar o back-end (QR, concorrência, auth própria), que é onde está a parte mais relevante do sistema.
 
 ### Papéis (3 perfis distintos, com autenticação)
 - **Organizador**: cria e gerencia eventos.
@@ -60,7 +71,7 @@ Decidi dar identidade própria ao produto em vez de entregar um cinema genérico
 
 ---
 
-## 3. Requisitos funcionais
+## 3. ✅ Requisitos funcionais
 
 ### Front-End
 - [x] Navegação e busca de eventos publicados (data, local, preço) — catálogo de filmes via TMDb; ver seções 4.26 a 4.30
@@ -72,7 +83,7 @@ Decidi dar identidade própria ao produto em vez de entregar um cinema genérico
 - [x] Tela de portaria com retorno claro: válido / inválido / já utilizado / evento errado
 - [x] Leitura de QR via câmera na portaria, com digitação manual como alternativa
 
-*(Autenticação — login e cadastro — não está listada como item separado nesta seção porque é pré-requisito transversal aos itens acima, não um requisito funcional isolado do desafio. Está implementada; ver seção 4.20 a 4.24.)*
+*(Autenticação — login e cadastro — não está listada como item separado porque é pré-requisito transversal aos itens acima. Está implementada; ver seção 4.20 a 4.24.)*
 
 ### Back-End
 - [x] Integração com API externa de catálogo (ver decisão na seção 4.26)
@@ -83,17 +94,19 @@ Decidi dar identidade própria ao produto em vez de entregar um cinema genérico
 - [x] Geração de link compartilhável do ingresso
 - [x] Validação de ingresso impedindo reuso
 
-### Fora de escopo (explícito no desafio — não implementar)
+### Fora de escopo
 Nota fiscal, revenda entre usuários, aplicativo nativo, recuperação de senha, envio de ingresso por e-mail.
 
-### Opcionais (somam nota, não obrigatórios)
-Busca/filtro avançado, painel do organizador mais completo, cancelamento com devolução ao estoque, mapa de assentos em tempo real, Docker Compose, testes automatizados, deploy publicado (**+1 ponto garantido no critério oficial**).
+### Extras implementados além do essencial
+Busca/filtro de catálogo, painel do organizador, cancelamento de sessão com devolução ao estoque, Docker Compose para o banco local, e deploy publicado.
 
 ---
 
-## 4. Decisões técnicas tomadas até agora
+## 4. 🧩 Decisões técnicas tomadas até agora
 
-Cada decisão abaixo inclui o motivo — é o material bruto para a seção "como pensei" do README final.
+Cada decisão abaixo inclui o motivo, na ordem em que foram tomadas ao longo do desenvolvimento.
+
+#### 🏗️ Fundação
 
 ### 4.1 Stack final
 
@@ -129,16 +142,16 @@ Cada decisão abaixo inclui o motivo — é o material bruto para a seção "com
               └──────────────────┘
 ```
 
-Escolhi essa stack para maximizar a demonstração de engenharia de software dentro dos 7 dias de prazo, sem adicionar complexidade desnecessária:
+Escolhi essa stack para focar em engenharia de software sólida, sem adicionar complexidade desnecessária:
 
 - **Next.js + TypeScript**: base sólida para a aplicação web, com deploy simples na Vercel.
 - **NestJS + TypeScript**: estrutura o backend em módulos e concentra ali toda a lógica de negócio — autenticação, autorização, reservas, pagamentos, ingressos e portaria.
 - **PostgreSQL**: banco relacional adequado ao domínio, e especialmente apropriado para garantir integridade e concorrência na venda de assentos (a regra "o mesmo lugar não pode ser vendido duas vezes" se apoia em transações/constraints do próprio banco).
 - **Prisma**: camada de acesso ao banco fortemente integrada ao TypeScript, com migrations e modelagem tipada.
-- **JWT + Argon2id + RBAC**: autenticação e autorização implementadas diretamente na API, em vez de delegadas a um BaaS — isso é proposital: o desafio pede para ver a camada de backend que eu projetei, não uma configuração de terceiro.
+- **JWT + Argon2id + RBAC**: autenticação e autorização implementadas diretamente na API, em vez de delegadas a um BaaS — preferi manter essa camada sob meu controle em vez de depender de configuração de terceiro.
 - **TMDb**: catálogo externo com baixo risco de integração (ver decisão 4.2), liberando tempo para as regras de negócio mais relevantes.
 - **Docker Compose**: facilita reprodução do ambiente de desenvolvimento por quem for avaliar o projeto.
-- **Vercel (front) + hospedagem gerenciada para o backend + Postgres gerenciado**: entrega uma aplicação de fato acessível pela internet, sem depender de manter infraestrutura ou computador pessoal ligado. *(Provedor específico do backend/banco — Railway, Render, Fly.io, Neon etc. — a definir; ver seção 6.)*
+- **Vercel (front) + Render (backend/Postgres gerenciado)**: entrega uma aplicação de fato acessível pela internet, sem depender de manter infraestrutura ou computador pessoal ligado. Trade-off de cold start no free tier documentado e aceito (ver seção 4.11).
 
 Evitei deliberadamente microserviços, Redis, filas, Kubernetes e qualquer tecnologia que não agregasse valor proporcional ao escopo. O objetivo aqui é mostrar boas decisões arquiteturais, segurança, consistência de dados, tratamento de concorrência e um fluxo completo — não quantidade de tecnologias.
 
@@ -150,7 +163,7 @@ Evitei deliberadamente microserviços, Redis, filas, Kubernetes e qualquer tecno
 **Porquê**:
 - Ticketmaster Discovery tem mais fricção de integração (rate limit mais apertado, dados de venue inconsistentes/incompletos).
 - TMDb tem documentação madura, resposta rápida de aprovação de key, dados ricos (poster, sinopse) que melhoram a UI sem esforço extra.
-- Com 7 dias de prazo, a fricção técnica economizada é redirecionada para as partes mais avaliadas: QR não forjável, concorrência de assentos, portaria, README.
+- A fricção técnica economizada foi redirecionada para as partes mais relevantes do sistema: QR não forjável, concorrência de assentos, portaria, README.
 - **Risco identificado e aceito conscientemente**: cinema é o cenário mais "óbvio" para filme + assentos, correndo o risco de parecer padrão. Mitigação: a diferenciação não vem da API escolhida, e sim de como as telas de reserva, recusa de pagamento e portaria são desenhadas — isso é decisão de produto, não de fonte de dados.
 
 ### 4.3 Modelo de reserva — mapa de assentos, sem pista
@@ -158,13 +171,13 @@ Evitei deliberadamente microserviços, Redis, filas, Kubernetes e qualquer tecno
 
 **Porquê**:
 - Coerente com a escolha de TMDb/cinema.
-- É a parte tecnicamente mais rica do desafio (concorrência real: dois clientes disputando o mesmo assento), e por isso a que mais demonstra capacidade técnica.
-- O próprio desafio recomenda fluxo completo e simples em vez de dois fluxos pela metade — fazer só um bem feito reduz risco de entrega capenga no prazo.
+- É a parte tecnicamente mais rica do fluxo (concorrência real: dois clientes disputando o mesmo assento), e por isso a que mais demonstra capacidade técnica.
+- Preferi um fluxo completo e bem feito a dois fluxos implementados pela metade.
 
 ### 4.4 Arquitetura de backend — API própria, sem BaaS
-Consolidado dentro da stack final (seção 4.1): NestJS concentra toda a lógica de negócio, com Auth própria (JWT + Argon2id + RBAC). O PDF do desafio lista explicitamente frameworks de API (NestJS, Express, FastAPI, Django, Spring Boot) como as opções de back-end — não cita BaaS como alternativa, o que reforça que querem ver uma camada de API projetada pelo candidato, não configurada a partir de um provedor.
+Consolidado dentro da stack final (seção 4.1): NestJS concentra toda a lógica de negócio, com Auth própria (JWT + Argon2id + RBAC), projetada por mim em vez de configurada a partir de um provedor externo.
 
-**Vercel para deploy do front**: decisão de baixo risco — é a opção literalmente sugerida no PDF ("Vercel ou plataforma similar"), vale +1 ponto no critério oficial.
+**Vercel para deploy do front**: opção simples e confiável para publicar uma aplicação Next.js.
 
 ### 4.5 Ambiente de banco local — Docker Compose
 
@@ -196,7 +209,7 @@ Testado localmente (Windows 11 + WSL2 + Docker Desktop): banco sobe com `docker 
 
 **Decisão**: usar Prisma na linha 6.x, não a 7 (que veio instalada por padrão ao rodar `npx prisma init` nesta fase do projeto).
 
-**Porquê**: a versão 7 exige uma configuração nova (`prisma.config.ts` obrigatório, mudança de como a `DATABASE_URL` é resolvida) que ainda tem pouca documentação e poucos tutoriais maduros. Dado o prazo de 7 dias, priorizei a versão estável e amplamente documentada — menos superfície de coisa nova pra debugar, mais tempo pra regra de negócio. Isso significa: `schema.prisma` resolve a conexão sozinho via `datasource db { url = env("DATABASE_URL") }`, sem `prisma.config.ts` na raiz do backend.
+**Porquê**: a versão 7 exige uma configuração nova (`prisma.config.ts` obrigatório, mudança de como a `DATABASE_URL` é resolvida) que ainda tem pouca documentação e poucos tutoriais maduros. Priorizei a versão estável e amplamente documentada — menos superfície de coisa nova pra debugar, mais tempo pra regra de negócio. Isso significa: `schema.prisma` resolve a conexão sozinho via `datasource db { url = env("DATABASE_URL") }`, sem `prisma.config.ts` na raiz do backend.
 
 ### 4.7 Schema do banco
 
@@ -213,13 +226,11 @@ Modelagem inicial com 10 tabelas, cobrindo os três papéis (organizador, client
 - **ValidationLog** — registro de cada tentativa de validação na portaria (para rastrear "já utilizado" e auditoria)
 - **Payment** — registro da simulação de pagamento (confirmado ou recusado)
 
-*(Diagrama de relacionamento entre as tabelas: a incluir aqui numa próxima atualização, se fizer sentido para clareza.)*
-
 ### 4.8 Concorrência no assento — constraint UNIQUE, não lock manual
 
 **Decisão**: a garantia de que o mesmo assento não seja vendido duas vezes vem de uma constraint `UNIQUE(sessionId, seatId)` na tabela `ReservationSeat`, aplicada dentro de uma transação Prisma.
 
-**Porquê**: delegar essa garantia ao próprio banco (constraint de unicidade) é mais robusto do que implementar um lock otimista ou pessimista na aplicação — o Postgres rejeita a segunda tentativa de insert automaticamente, mesmo sob concorrência real (duas requisições simultâneas), sem eu precisar reinventar controle de concorrência na camada de aplicação. Menos código próprio para errar, dado o prazo.
+**Porquê**: delegar essa garantia ao próprio banco (constraint de unicidade) é mais robusto do que implementar um lock otimista ou pessimista na aplicação — o Postgres rejeita a segunda tentativa de insert automaticamente, mesmo sob concorrência real (duas requisições simultâneas), sem eu precisar reinventar controle de concorrência na camada de aplicação.
 
 ### 4.9 QR code do ingresso — JWT assinado (HS256)
 
@@ -227,10 +238,10 @@ Modelagem inicial com 10 tabelas, cobrindo os três papéis (organizador, client
 
 **Porquê**:
 - Um ID cru seria trivialmente forjável (ou adivinhável) — não atende ao requisito de QR "que não possa ser forjado".
-- Reaproveita a mesma biblioteca e o mesmo modelo mental já usado na autenticação (JWT + Argon2id), reduzindo a quantidade de código novo e criptografia própria pra debugar em 7 dias.
+- Reaproveita a mesma biblioteca e o mesmo modelo mental já usado na autenticação (JWT + Argon2id), reduzindo a quantidade de código novo e criptografia própria pra manter.
 - JWT já resolve expiração de forma nativa (`exp`), o que é útil para invalidar ingressos de sessões já encerradas.
 
-**Pendente de detalhar**: o payload exato do JWT do ticket (quais campos entram — ex: `ticketId`, `sessionId`, `seatId` — e o tempo de expiração escolhido). Ver seção 6.
+O payload exato (campos e tempo de expiração) está detalhado na decisão 4.10.
 
 ### 4.10 Payload do JWT do ticket
 
@@ -257,9 +268,7 @@ Sobre a expiração: optei por atrelar o `exp` ao horário da sessão (em vez de
 - Trade-off consciente e documentado: **cold start**. No free tier, o serviço web "dorme" após um período de inatividade e a primeira requisição depois disso demora mais para responder (o servidor precisa "acordar"). Decidi aceitar esse trade-off porque:
   - O impacto é só na primeira requisição após inatividade, não no uso contínuo.
   - Para um projeto de portfólio (visitado esporadicamente, não em produção real com tráfego constante), durabilidade do free tier pesa mais do que latência de cold start.
-  - Não justifica o custo de um plano pago para um desafio técnico.
-
-**Pendente**: se o cold start atrapalhar a demonstração para o avaliador, considerar algum mecanismo simples de keep-alive (ex: ping periódico) — decisão a avaliar mais perto da entrega, sem prioridade agora.
+  - Não justifica o custo de um plano pago para este projeto.
 
 ### 4.12 Identidade visual do Cinema Arcano — fechada
 
@@ -275,47 +284,9 @@ Sobre a expiração: optei por atrelar o `exp` ao horário da sessão (em vez de
 
 Estilo visual: **neo-brutalismo** — sem `border-radius`, bordas sólidas de 2px, sombras duras (`box-shadow` deslocada, sem blur), tipografia em caixa alta com `tracking-widest` nos títulos e labels.
 
-**Porquê**: reforça a decisão já registrada na seção 2.1 (identidade "Cinema Arcano", ritual de entrada) sem gastar tempo do prazo em UX não-convencional — o neo-brutalismo dá personalidade visual forte com poucas regras de CSS (sem sombras suaves, sem cantos arredondados, sem gradientes), evitando o visual genérico de UI gerada por IA que o próprio desafio penaliza como "AI slop".
+**Porquê**: reforça a identidade "Cinema Arcano" (seção 2.1) sem exigir UX não-convencional — o neo-brutalismo dá personalidade visual forte com poucas regras de CSS (sem sombras suaves, sem cantos arredondados, sem gradientes), fugindo do visual genérico que qualquer ferramenta de geração de UI entrega por padrão.
 
-### 4.20 Frontend — roteamento e formulários
-
-**Decisão**: roteamento via **App Router** do Next.js (`app/`); formulários com **`react-hook-form` + `zod`** (validação de schema), integrados via `@hookform/resolvers`.
-
-**Porquê**: App Router é o padrão atual do Next.js e o projeto já foi inicializado dessa forma. `react-hook-form` evita re-render a cada tecla digitada (melhor performance que estado controlado manual), e `zod` centraliza a validação em um schema só, reaproveitado tanto para o tipo TypeScript do formulário (`z.infer`) quanto para a validação em si — uma fonte de verdade, sem duplicar regras entre tipo e validação.
-
-### 4.21 Frontend — módulo Auth (login e cadastro)
-
-**Decisão**: páginas `app/login/page.tsx` e `app/register/page.tsx`, ambas client components (`'use client'`), consumindo `POST /auth/login` e `POST /auth/register` via um serviço centralizado (`app/services/api.ts`).
-
-**Porquê**: centralizar as chamadas HTTP em `api.ts` evita duplicar `fetch` e tratamento de erro em cada página — qualquer mudança de URL base ou de contrato da API muda em um lugar só. `NEXT_PUBLIC_API_URL` com fallback para `http://localhost:3000` (porta fixa do backend) permite rodar local sem `.env` configurado e trocar de ambiente (produção) só setando a variável. *(Nota: o fallback foi originalmente escrito como `3001` por engano — corrigido para `3000` ainda no dia 20/08, ver changelog.)*
-
-**Tratamento de erro**: tanto `login` quanto `registerUser` leem `errorData.message` do corpo da resposta do backend quando a requisição falha, com uma mensagem genérica de fallback caso o backend não retorne corpo JSON válido — assim o usuário vê o motivo real da falha (ex: e-mail já cadastrado) e não só um erro genérico, exceto quando o backend realmente não informa nada.
-
-### 4.22 Frontend — persistência do token (decisão provisória)
-
-**Decisão**: após login bem-sucedido, o `accessToken` retornado é salvo em `localStorage` (`arcano_token`).
-
-**Porquê**: solução mais simples para o prazo do desafio, sem exigir configuração de cookie `httpOnly` + proteção CSRF no backend. **Trade-off consciente**: `localStorage` é mais exposto a XSS do que um cookie `httpOnly` (qualquer script injetado na página consegue ler o token). Aceito esse risco porque o escopo do desafio não inclui conteúdo gerado por terceiros/usuários que pudesse virar vetor de XSS (não há campo de texto livre exibido sem sanitização para outros usuários). Redirecionamento pós-login e leitura desse token nas demais páginas ainda estão pendentes (ver seção 6).
-
-### 4.23 Frontend — escopo "Esqueci a senha" descartado, sem rastro na UI
-
-**Decisão**: a funcionalidade de recuperação de senha não será implementada (já estava fora de escopo — ver seção 3, "Fora de escopo"), e por isso **nenhum elemento de UI relacionado a ela existe** nas telas de login/cadastro.
-
-**Porquê**: um botão ou link de "esqueci minha senha" que não faz nada de útil (ex: só um alerta) é pior do que a simples ausência da funcionalidade — no desafio, "tudo o que existe na tela deve funcionar" pesa na nota, e um elemento morto chama mais atenção negativa do avaliador do que a decisão documentada de não ter recuperação de senha.
-
-### 4.24 Frontend — acessibilidade básica de formulários
-
-**Decisão**: todo `<label>` nos formulários usa `htmlFor` apontando para o `id` do `<input>` correspondente.
-
-**Porquê**: sem essa associação, clicar no texto do label não foca o campo e leitores de tela não conseguem relacionar a legenda ao input — ajuste de baixo custo que evita um problema básico de acessibilidade sem alterar nada visualmente.
-
-### 4.25 Frontend — estratégia de pós-login (Context API)
-
-**Decisão**: estado de autenticação pós-login gerenciado com **Context API** nativa do React (`AuthContext` + `AuthProvider`, em `app/context/AuthContext.tsx`), envolvendo toda a aplicação a partir do `layout.tsx`. Descartadas as alternativas Zustand e checagem manual de token por página.
-
-**Porquê**: o escopo atual é pequeno — poucas páginas, um único token de sessão — o que não justifica adicionar Zustand como dependência nova para aprender sob prazo apertado (mesmo racional já aplicado em outras decisões do projeto, como a guard própria sem Passport, seção 4.17). Context API resolve bem esse escopo sem lib externa. Checagem manual de token em cada página foi descartada por espalhar a lógica de sessão em vez de centralizá-la em um único lugar.
-
-**Implementação**: o `AuthProvider` lê `arcano_token`/`arcano_user` do `localStorage` ao montar (populando o contexto antes de qualquer redirecionamento de rota protegida) e expõe `user`, `token`, `login(token, user)` e `logout()`. `login/page.tsx` chama `POST /auth/login`, busca os dados do usuário via `GET /auth/me` (endpoint já existente do módulo Auth, seção 4.19) e então chama `login()` do contexto, redirecionando para `/` em seguida. `logout()` limpa tanto o contexto quanto o `localStorage`. A chamada extra a `/auth/me` evita duplicar no frontend a decisão de payload do JWT de sessão (que é responsabilidade do backend, seção 4.7) — o frontend sempre lê o usuário da mesma fonte, logo após login ou ao recarregar a página.
+#### 🔐 Autenticação e papéis
 
 ### 4.13 Fluxo de desenvolvimento e plano dia-a-dia
 
@@ -356,7 +327,7 @@ Estilo visual: **neo-brutalismo** — sem `border-radius`, bordas sólidas de 2p
 
 **Decisão**: `JwtAuthGuard` implementada manualmente usando `JwtService.verifyAsync` (do `@nestjs/jwt`) diretamente dentro da guard, sem usar as bibliotecas `passport`/`passport-jwt`. A extração do token do header `Authorization: Bearer <token>` também é feita manualmente dentro da própria guard, sem uma `strategy` separada.
 
-**Porquê**: Passport adicionaria uma biblioteca inteira (com seu próprio modelo de `strategy`/`serialize`/`deserialize`) só para resolver algo que o `@nestjs/jwt` sozinho já cobre — verificar um token e popular `request['user']`. Menos superfície de código novo para debugar dado o prazo de 7 dias. A guard ficou autocontida: quem lê `jwt-auth.guard.ts` entende o fluxo inteiro sem precisar rastrear configuração de uma strategy em outro arquivo.
+**Porquê**: Passport adicionaria uma biblioteca inteira (com seu próprio modelo de `strategy`/`serialize`/`deserialize`) só para resolver algo que o `@nestjs/jwt` sozinho já cobre — verificar um token e popular `request['user']`. A guard ficou autocontida: quem lê `jwt-auth.guard.ts` entende o fluxo inteiro sem precisar rastrear configuração de uma strategy em outro arquivo.
 
 ### 4.18 Autorização por papel — RolesGuard + decorator, testada com usuários reais
 
@@ -369,6 +340,48 @@ Estilo visual: **neo-brutalismo** — sem `border-radius`, bordas sólidas de 2p
 **Decisão**: `GET /auth/me` usa apenas `JwtAuthGuard` (exige estar logado), sem `RolesGuard`/`@Roles`. Qualquer papel autenticado (ADMIN, CUSTOMER ou GATE) pode acessar essa rota.
 
 **Porquê**: o dado retornado por `/auth/me` já vem do próprio token decodificado (`req['user']`) — ou seja, cada usuário só enxerga os próprios dados, nunca os de outra pessoa. Restringir essa rota por papel não adiciona segurança nenhuma (não há vazamento de dado de terceiros possível) e quebraria a experiência normal: um CUSTOMER logado precisa conseguir ver o próprio perfil. `RolesGuard` fica reservada para rotas que de fato mexem em recursos de outra pessoa ou do sistema como um todo — por exemplo, futuramente, `POST /sessions` (publicar sessão de filme, ação do organizador) ou uma eventual rota de listagem de todos os usuários.
+
+### 4.20 Frontend — roteamento e formulários
+
+**Decisão**: roteamento via **App Router** do Next.js (`app/`); formulários com **`react-hook-form` + `zod`** (validação de schema), integrados via `@hookform/resolvers`.
+
+**Porquê**: App Router é o padrão atual do Next.js e o projeto já foi inicializado dessa forma. `react-hook-form` evita re-render a cada tecla digitada (melhor performance que estado controlado manual), e `zod` centraliza a validação em um schema só, reaproveitado tanto para o tipo TypeScript do formulário (`z.infer`) quanto para a validação em si — uma fonte de verdade, sem duplicar regras entre tipo e validação.
+
+### 4.21 Frontend — módulo Auth (login e cadastro)
+
+**Decisão**: páginas `app/login/page.tsx` e `app/register/page.tsx`, ambas client components (`'use client'`), consumindo `POST /auth/login` e `POST /auth/register` via um serviço centralizado (`app/services/api.ts`).
+
+**Porquê**: centralizar as chamadas HTTP em `api.ts` evita duplicar `fetch` e tratamento de erro em cada página — qualquer mudança de URL base ou de contrato da API muda em um lugar só. `NEXT_PUBLIC_API_URL` com fallback para `http://localhost:3000` (porta fixa do backend) permite rodar local sem `.env` configurado e trocar de ambiente (produção) só setando a variável. *(Nota: o fallback foi originalmente escrito como `3001` por engano — corrigido para `3000` ainda no dia 20/08, ver changelog.)*
+
+**Tratamento de erro**: tanto `login` quanto `registerUser` leem `errorData.message` do corpo da resposta do backend quando a requisição falha, com uma mensagem genérica de fallback caso o backend não retorne corpo JSON válido — assim o usuário vê o motivo real da falha (ex: e-mail já cadastrado) e não só um erro genérico, exceto quando o backend realmente não informa nada.
+
+### 4.22 Frontend — persistência do token
+
+**Decisão**: após login bem-sucedido, o `accessToken` retornado é salvo em `localStorage` (`arcano_token`).
+
+**Porquê**: solução simples, sem exigir configuração de cookie `httpOnly` + proteção CSRF no backend. **Trade-off consciente**: `localStorage` é mais exposto a XSS do que um cookie `httpOnly` (qualquer script injetado na página consegue ler o token). Aceito esse risco porque o projeto não expõe conteúdo gerado por outros usuários sem sanitização, que é o vetor típico de XSS. Redirecionamento pós-login e leitura desse token nas demais páginas foram resolvidos na decisão 4.25.
+
+### 4.23 Frontend — escopo "Esqueci a senha" descartado, sem rastro na UI
+
+**Decisão**: a funcionalidade de recuperação de senha não será implementada (já estava fora de escopo — ver seção 3, "Fora de escopo"), e por isso **nenhum elemento de UI relacionado a ela existe** nas telas de login/cadastro.
+
+**Porquê**: um botão ou link de "esqueci minha senha" que não faz nada de útil (ex: só um alerta) é pior do que a simples ausência da funcionalidade — prefiro a ausência clara e documentada a um elemento morto na tela.
+
+### 4.24 Frontend — acessibilidade básica de formulários
+
+**Decisão**: todo `<label>` nos formulários usa `htmlFor` apontando para o `id` do `<input>` correspondente.
+
+**Porquê**: sem essa associação, clicar no texto do label não foca o campo e leitores de tela não conseguem relacionar a legenda ao input — ajuste de baixo custo que evita um problema básico de acessibilidade sem alterar nada visualmente.
+
+### 4.25 Frontend — estratégia de pós-login (Context API)
+
+**Decisão**: estado de autenticação pós-login gerenciado com **Context API** nativa do React (`AuthContext` + `AuthProvider`, em `app/context/AuthContext.tsx`), envolvendo toda a aplicação a partir do `layout.tsx`. Descartadas as alternativas Zustand e checagem manual de token por página.
+
+**Porquê**: o escopo atual é pequeno — poucas páginas, um único token de sessão — o que não justifica adicionar Zustand como dependência nova para aprender sob prazo apertado (mesmo racional já aplicado em outras decisões do projeto, como a guard própria sem Passport, seção 4.17). Context API resolve bem esse escopo sem lib externa. Checagem manual de token em cada página foi descartada por espalhar a lógica de sessão em vez de centralizá-la em um único lugar.
+
+**Implementação**: o `AuthProvider` lê `arcano_token`/`arcano_user` do `localStorage` ao montar (populando o contexto antes de qualquer redirecionamento de rota protegida) e expõe `user`, `token`, `login(token, user)` e `logout()`. `login/page.tsx` chama `POST /auth/login`, busca os dados do usuário via `GET /auth/me` (endpoint já existente do módulo Auth, seção 4.19) e então chama `login()` do contexto, redirecionando para `/` em seguida. `logout()` limpa tanto o contexto quanto o `localStorage`. A chamada extra a `/auth/me` evita duplicar no frontend a decisão de payload do JWT de sessão (que é responsabilidade do backend, seção 4.7) — o frontend sempre lê o usuário da mesma fonte, logo após login ou ao recarregar a página.
+
+#### 🎞️ Catálogo
 
 ### 4.26 Backend do Catálogo: proxy do TMDb com resposta mapeada
 
@@ -400,21 +413,23 @@ Estilo visual: **neo-brutalismo** — sem `border-radius`, bordas sólidas de 2p
 
 **Porquê**: elimina ambiguidade na hora de colar o conteúdo entregue pela IA no lugar certo do projeto — sem essa convenção, cada arquivo exigia uma pergunta separada de "isso vai onde?".
 
+#### 🎟️ Salas e sessões
+
 ### 4.31 Sala única, seedada, com 40 assentos
 
 **Decisão**: uma única `Room` fixa ("Cinema Arcano — Sala 1"), criada via seed, com 40 assentos (`Seat`) organizados em grade (5 fileiras × 8 colunas, ex: A1–A8 até E1–E8). Todas as `Session` (filme + data/horário + preço, criadas pelo organizador) apontam para essa mesma sala.
 
-**Porquê**: o schema (seção 4.7) já modela `Room`/`Seat` como entidades separadas de `Session`, então essa é uma decisão de produto/seed, não uma limitação técnica — suporta múltiplas salas no futuro sem migration, se um dia fizer sentido. O PDF nunca exige múltiplos locais, só "data, local e preço" por evento; uma sala fixa satisfaz "local" de forma trivial e coerente com a identidade de um cinema específico (não uma rede). 40 assentos é grande o bastante pra parecer um mapa real e pequeno o bastante pra caber numa tela sem virar problema de scroll/UI.
+**Porquê**: o schema (seção 4.7) já modela `Room`/`Seat` como entidades separadas de `Session`, então essa é uma decisão de produto/seed, não uma limitação técnica — suporta múltiplas salas no futuro sem migration, se um dia fizer sentido. Uma sala fixa é coerente com a identidade de um cinema específico (não uma rede). 40 assentos é grande o bastante pra parecer um mapa real e pequeno o bastante pra caber numa tela sem virar problema de scroll/UI.
 
 ### 4.32 Comportamento do módulo Salas/Sessões
 
 **Decisões**, definidas antes de iniciar a implementação:
 
-- **Criação de sessão pelo organizador**: tela própria (`/admin/sessions/new` ou similar — nome exato a definir na implementação), com busca de filme dedicada (reaproveitando `searchMovies`/`getMovies` do serviço já existente em `api.ts`), em vez de um botão "Criar sessão" embutido na Home pública do Catálogo. Mantém a área do organizador separada da navegação do cliente.
+- **Criação de sessão pelo organizador**: tela própria (`/admin/sessions/new`), com busca de filme dedicada (reaproveitando `searchMovies`/`getMovies` do serviço já existente em `api.ts`), em vez de um botão "Criar sessão" embutido na Home pública do Catálogo. Mantém a área do organizador separada da navegação do cliente.
 - **Conflito de horário**: bloqueado. Como só existe uma sala (seção 4.31), duas sessões não podem se sobrepor nela — a criação de uma nova sessão precisa validar contra o intervalo (`início` até `início + duração do filme`) das sessões já existentes na mesma sala e rejeitar em caso de sobreposição.
 - **Visibilidade de sessões**: só sessões futuras aparecem para o cliente (`GET` público de sessões de um filme filtra `dataHora >= now`). Sessões passadas não ficam visíveis nem reserváveis nessa consulta — não há tela de histórico no escopo atual.
 
-**Porquê**: separar a área do organizador evita misturar fluxo de gestão com navegação pública (coerente com os 3 papéis distintos do desafio). Bloquear conflito de horário é a única forma de a sala única (4.31) fazer sentido operacional — sem essa validação, o sistema permitiria vender ingresso pra duas sessões impossíveis de acontecer ao mesmo tempo na mesma sala física. Esconder sessões passadas evita o cliente tentar reservar algo que já aconteceu, sem precisar de uma tela de histórico que não está no escopo do desafio.
+**Porquê**: separar a área do organizador evita misturar fluxo de gestão com navegação pública, mantendo os 3 papéis do sistema bem distintos. Bloquear conflito de horário é a única forma de a sala única (4.31) fazer sentido operacional — sem essa validação, o sistema permitiria vender ingresso pra duas sessões impossíveis de acontecer ao mesmo tempo na mesma sala física. Esconder sessões passadas evita o cliente tentar reservar algo que já aconteceu, sem precisar de uma tela de histórico fora do escopo atual.
 
 ### 4.33 Uso do enum `SessionStatus`
 
@@ -423,7 +438,7 @@ Estilo visual: **neo-brutalismo** — sem `border-radius`, bordas sólidas de 2p
 - Organizador pode cancelar uma sessão já publicada (`status = CANCELLED`), em vez de deletar a linha — preserva histórico de `Reservation`/`ReservationSeat` já ligados a ela.
 - A validação de conflito de horário (seção 4.32) precisa ignorar sessões com `status = CANCELLED` ao checar sobreposição — uma sessão cancelada libera o horário na sala para uma nova sessão.
 
-**Porquê**: sem `CANCELLED`, a decisão de bloquear conflito de horário (4.32) fica incompleta — não haveria como reabrir um horário depois de cancelar uma sessão sem deletar a linha e arriscar quebrar `Reservation`/`ReservationSeat`. `FINISHED` como campo calculado evita a necessidade de um job periódico atualizando status no banco, o que seria desproporcional ao escopo do desafio (mesmo racional já usado pra evitar infra desnecessária, ver seção 2 do contexto de sessão). Alternativa considerada e descartada: remover o enum do schema por ser "campo não usado" — descartada porque cancelamento de sessão é um caso real que vale a pena cobrir dado o baixo custo de implementação.
+**Porquê**: sem `CANCELLED`, a decisão de bloquear conflito de horário (4.32) fica incompleta — não haveria como reabrir um horário depois de cancelar uma sessão sem deletar a linha e arriscar quebrar `Reservation`/`ReservationSeat`. `FINISHED` como campo calculado evita a necessidade de um job periódico atualizando status no banco, o que seria infraestrutura desnecessária para o volume real do sistema. Alternativa considerada e descartada: remover o enum do schema por ser "campo não usado" — descartada porque cancelamento de sessão é um caso real que vale a pena cobrir dado o baixo custo de implementação.
 
 ### 4.34 Implementação do `SessionsModule`
 
@@ -449,6 +464,8 @@ Estilo visual: **neo-brutalismo** — sem `border-radius`, bordas sólidas de 2p
 
 **Porquê**: conflito de horário e expiração de ticket dependem do horário de término. Sem fallback, uma sessão de filme sem runtime quebraria regras importantes do domínio. O fallback é explícito no código e não é persistido como dado real do filme.
 
+#### 🪑 Reserva e ingresso
+
 ### 4.38 Reserva/Ingresso no backend
 
 **Decisão**: `ReservationsModule` implementado com criação de reserva, pagamento simulado e ticket público:
@@ -465,7 +482,7 @@ Estilo visual: **neo-brutalismo** — sem `border-radius`, bordas sólidas de 2p
 - A liberação de assento expirado acontece on-the-fly na tentativa de nova reserva, sem job/cron.
 - O QR/JWT do ticket contém `ticketId`, `reservationId` e `sessionId`, com `exp` no horário de término da sessão.
 
-**Porquê**: separar reserva e pagamento reflete melhor o fluxo real de compra (assentos travados primeiro, confirmação depois). A constraint `UNIQUE(sessionId, seatId)` continua sendo a garantia principal contra venda duplicada, e a aplicação traduz a colisão do Prisma em `409 Conflict`. A expiração on-the-fly evita infraestrutura extra e mantém o escopo proporcional ao desafio.
+**Porquê**: separar reserva e pagamento reflete melhor o fluxo real de compra (assentos travados primeiro, confirmação depois). A constraint `UNIQUE(sessionId, seatId)` continua sendo a garantia principal contra venda duplicada, e a aplicação traduz a colisão do Prisma em `409 Conflict`. A expiração on-the-fly evita infraestrutura extra (job/cron) sem custo real de negócio.
 
 ### 4.39 Componentes reutilizáveis no frontend
 
@@ -483,11 +500,11 @@ Estilo visual: **neo-brutalismo** — sem `border-radius`, bordas sólidas de 2p
 
 **Decisão**: documentar explicitamente o uso de IA ao longo do desenvolvimento. Usei Claude Sonnet 5 como principal apoio de desenvolvimento, Gemini Pro pontualmente para alguns testes, e ChatGPT Codex 5.5 para revisão geral do projeto e ajuda na correção de falhas.
 
-**Porquê**: o desafio pede transparência sobre uso de IA, então preferi registrar o processo com clareza. Como usei essas ferramentas nos planos gratuitos, e também por escolha própria, não terceirizei decisões técnicas, planejamento, escopo ou priorização para a IA. As decisões de produto e arquitetura continuam registradas e justificadas neste documento em primeira pessoa.
+**Porquê**: preferi registrar o processo com clareza. Como usei essas ferramentas nos planos gratuitos, e também por escolha própria, não terceirizei decisões técnicas, planejamento, escopo ou priorização para a IA. As decisões de produto e arquitetura continuam registradas e justificadas neste documento em primeira pessoa.
 
 **Design**: as decisões visuais foram guiadas pelo meu gosto pessoal, não por direção criativa terceirizada para IA. O Cinema Arcano usa uma estética neo-brutalista com paleta própria, bordas fortes, sombras duras e microcopy temática porque essa foi a identidade que eu quis defender para fugir de uma interface genérica.
 
-**Stack enxuta**: evitei propositalmente usar muitos frameworks ou soluções prontas. Isso foi uma escolha para demonstrar que entendo as peças que estou construindo e consigo criar a base do projeto do zero sem depender de ferramentas prontas. Não é uma rejeição a esse tipo de ferramenta em outros contextos — elas têm valor real para acelerar entregas —, mas neste desafio fez mais sentido mostrar o processo manual e o raciocínio por trás das escolhas.
+**Stack enxuta**: evitei propositalmente usar muitos frameworks ou soluções prontas. Isso foi uma escolha para demonstrar que entendo as peças que estou construindo e consigo criar a base do projeto do zero sem depender de ferramentas prontas. Não é uma rejeição a esse tipo de ferramenta em outros contextos — elas têm valor real para acelerar entregas —, mas nesse projeto fez mais sentido mostrar o processo manual e o raciocínio por trás das escolhas.
 
 ### 4.42 Frontend de Reserva/Ingresso
 
@@ -495,13 +512,15 @@ Estilo visual: **neo-brutalismo** — sem `border-radius`, bordas sólidas de 2p
 
 **Ajuste necessário no backend**: `GET /sessions/:id` passou a devolver `room.seats` e `occupiedSeatIds`, considerando como ocupados assentos de reservas `CONFIRMED` e reservas `PENDING` ainda não expiradas. Isso permite que o frontend desenhe o mapa com assentos livres/ocupados sem criar uma rota separada só para disponibilidade.
 
-**Porquê**: o mapa de assentos é o coração técnico do desafio no papel de cliente. Mostrar o estado dos assentos no detalhe da sessão e conduzir reserva → pagamento → ticket fecha um fluxo ponta a ponta visível para avaliação. O QR é gerado no frontend a partir do `qrToken` assinado pelo backend; assim o segredo de assinatura continua só na API.
+**Porquê**: o mapa de assentos é o coração técnico do fluxo do cliente. Mostrar o estado dos assentos no detalhe da sessão e conduzir reserva → pagamento → ticket fecha um fluxo ponta a ponta. O QR é gerado no frontend a partir do `qrToken` assinado pelo backend; assim o segredo de assinatura continua só na API.
 
 ### 4.43 Credenciais de teste no README
 
 **Decisão**: documentar no README as contas criadas pelo seed (`ADMIN`, dois `CUSTOMER` e `GATE`) com e-mail, senha e uso sugerido.
 
 **Porquê**: o recrutador precisa conseguir testar o sistema rapidamente, sem abrir `seed.ts` nem adivinhar credenciais. Como são contas de seed para ambiente de avaliação/desenvolvimento, deixá-las explícitas no README melhora a testabilidade e reduz fricção. Em produção real, essas senhas não existiriam como credenciais públicas.
+
+#### 🚪 Portaria e áreas logadas
 
 ### 4.44 Módulo de Portaria
 
@@ -511,7 +530,7 @@ Estilo visual: **neo-brutalismo** — sem `border-radius`, bordas sólidas de 2p
 
 **Frontend**: criada a rota `/gate`, disponível para a conta de portaria. A tela permite colar o token manualmente e também tenta leitura via câmera usando a API nativa `BarcodeDetector` quando o navegador suporta. Se o navegador não tiver suporte, o fluxo manual continua funcionando.
 
-**Porquê**: a Portaria fecha o ciclo do desafio: ingresso não forjável → validação → bloqueio de reuso → registro de auditoria. O endpoint centraliza a regra no backend para não depender da UI; a tela é só uma camada operacional para o recrutador testar.
+**Porquê**: a Portaria fecha o ciclo do sistema: ingresso não forjável → validação → bloqueio de reuso → registro de auditoria. O endpoint centraliza a regra no backend para não depender da UI; a tela é só uma camada operacional.
 
 ### 4.45 Gerenciamento de sessões e Meus ingressos
 
@@ -521,7 +540,7 @@ Estilo visual: **neo-brutalismo** — sem `border-radius`, bordas sólidas de 2p
 
 **Meus ingressos**: a tela `/reservations` lista reservas do cliente, mostra status da reserva e do pagamento, assentos, total estimado e permite abrir novamente o ticket quando já existe. Reservas `PENDING` ainda podem ser pagas por ali.
 
-**Porquê**: essas duas áreas reduzem dependência de fluxo linear para teste. O recrutador não precisa “perder” o link do ticket se sair da tela, e o organizador consegue conferir/cancelar sessões sem chamar a API manualmente. Mantive edição de sessão fora deste bloco porque cancelamento cobre a operação crítica do desafio sem introduzir regras ambíguas sobre alterar horário/preço depois de reservas existentes.
+**Porquê**: essas duas áreas reduzem dependência de um fluxo linear único. O cliente não precisa "perder" o link do ticket se sair da tela, e o organizador consegue conferir/cancelar sessões sem chamar a API manualmente. Mantive edição de sessão fora deste bloco porque cancelamento cobre a operação crítica sem introduzir regras ambíguas sobre alterar horário/preço depois de reservas existentes.
 
 ### 4.46 Checkout simulado e estados de acabamento
 
@@ -531,7 +550,9 @@ Estilo visual: **neo-brutalismo** — sem `border-radius`, bordas sólidas de 2p
 
 **Estados visuais**: foram criadas páginas globais do Next para `not-found.tsx`, `loading.tsx` e `error.tsx`, mantendo a identidade Cinema Arcano também em 404, carregamento e falha inesperada.
 
-**Porquê**: o desafio pede pagamento simulado com confirmação e recusa. Fazer a recusa apenas com um alerta no frontend seria frágil e não demonstraria regra de negócio. Ao registrar `FAILED` e liberar assentos no backend, o fluxo fica auditável e testável. A 404/loading/error personalizada evita cair na aparência padrão do framework durante a avaliação.
+**Porquê**: fazer a recusa apenas com um alerta no frontend seria frágil e não demonstraria regra de negócio de verdade. Ao registrar `FAILED` e liberar assentos no backend, o fluxo fica auditável e testável. A 404/loading/error personalizada evita cair na aparência padrão do framework.
+
+#### 🚀 Produção e acabamento final
 
 ### 4.47 Ajustes de validação, acesso e produção
 
@@ -556,7 +577,9 @@ Estilo visual: **neo-brutalismo** — sem `border-radius`, bordas sólidas de 2p
 
 **Seed em produção**: como o plano free do Render não libera shell no Web Service, o seed foi executado temporariamente pelo Start Command (`npx prisma migrate deploy && npx prisma db seed && node dist/src/main.js`) e depois o comando voltou para o formato normal. Seed confirmado por login com `admin@cinemaarcano.com`.
 
-**Trade-off**: no free tier do Render, o backend pode dormir após inatividade. Isso causa cold start na primeira requisição, aceito por ser projeto de desafio/portfólio e já documentado no README.
+**Trade-off**: no free tier do Render, o backend pode dormir após inatividade. Isso causa cold start na primeira requisição — aceito conscientemente e documentado no README, sem mecanismo de keep-alive.
+
+**UX do cold start**: a Home exibe um aviso temático de "Acordando a sala de projeção" quando as chamadas iniciais demoram alguns segundos. A intenção é deixar claro para o recrutador que o backend gratuito está acordando, sem usar keep-alive artificial nem esconder erros reais quando a API falha de fato.
 
 ### 4.49 Revisão de responsividade e acessibilidade
 
@@ -574,61 +597,29 @@ Estilo visual: **neo-brutalismo** — sem `border-radius`, bordas sólidas de 2p
 
 **Organização final**: removi assets padrão não usados do `create-next-app`, mantive apenas os assets reais do projeto (`logo.png`, bandeiras de pagamento e favicon), limpei comentários visuais que eram apenas bastidor de implementação e rodei validações finais de build/lint/test.
 
-**Porquê**: o desafio avalia um fluxo funcional completo, mas também penaliza aparência genérica. Essa etapa final melhora a percepção de acabamento sem mudar contratos principais da API nem adicionar complexidade estrutural fora do escopo.
+**Porquê**: um fluxo funcional completo é a base, mas acabamento visual importa para a percepção do produto. Essa etapa final melhora a percepção de acabamento sem mudar contratos principais da API nem adicionar complexidade estrutural fora do escopo.
 
 ---
 
-## 5. Requisitos de entrega
+## 5. 📦 Checklist de entrega
 
-- **Prazo**: 7 dias corridos a partir do recebimento do e-mail
-- **README**: detalhado, com passo a passo de setup, incluindo configuração do banco escolhido; qualquer coisa que não funcione como esperado deve ser mencionada
-- **Dados semeados (seed) obrigatórios**: 1 organizador, 2 clientes, 1 usuário de portaria, ao menos 1 evento publicado com ingressos disponíveis
-- **Deploy**: opcional, mas +1 ponto na nota final se publicado (Vercel ou similar)
-- **Repositório GitHub público**, com commits descritivos ao longo da semana (não um commit único no fim)
-- **Documentação do uso de IA**: seção no README ou arquivo dedicado explicando quais ferramentas foram usadas, em que partes, e o que foi feito sem IA. Artefatos de processo (specs, PRD, arquivos de contexto como este) devem ser versionados no repositório.
-
----
-
-## 6. Perguntas em aberto / a resolver nas próximas sessões
-
-- [x] ~~Definir identidade visual do Cinema Arcano (paleta, tipografia, tom de voz das telas)~~ — feito, ver seção 4.12
-- [x] ~~Definir estrutura de pastas do monorepo (front + back)~~ — feito, ver seção 4.1 e estrutura no repositório (`frontend/`, `backend/`)
-- [x] ~~Desenhar schema do banco~~ — feito, ver seção 4.7 (conferido visualmente no Prisma Studio)
-- [x] ~~Definir estratégia técnica do QR não forjável~~ — feito, ver seção 4.9
-- [x] ~~Definir estratégia de concorrência no assento~~ — feito, ver seção 4.8
-- [x] ~~Definir payload exato do JWT do ticket~~ — feito, ver seção 4.10
-- [x] ~~Escolher provedor de hospedagem para backend + Postgres gerenciado~~ — feito, ver seção 4.11 (Render, com trade-off de cold start documentado)
-- [x] ~~Montar plano dia-a-dia para os dias restantes do prazo~~ — feito, ver seção 4.13
-- [x] ~~Implementar módulo Auth completo (register, login, guards JWT/RBAC, seed)~~ — feito, ver seções 4.14 a 4.19
-- [x] ~~Validar `RolesGuard` com usuários reais~~ — feito, ver seção 4.18 (ADMIN 200, CUSTOMER/GATE 403)
-- [x] ~~Implementar frontend de Auth (login, cadastro)~~ — feito, ver seções 4.20 a 4.24
-- [x] ~~Estratégia de pós-login: redirecionamento após login e forma das demais páginas saberem que o usuário está autenticado~~ — feito, Context API, ver seção 4.25
-- [x] ~~Iniciar módulo Catálogo (integração TMDb) — backend e frontend~~ — feito, ver seções 4.26 a 4.30
-- [x] ~~Definir quantidade de salas e tamanho do mapa de assentos~~ — feito, ver seção 4.31 (sala única, 40 assentos)
-- [x] ~~Definir uso do enum `SessionStatus`~~ — feito, ver seção 4.33 (escopo mínimo: `SCHEDULED`/`CANCELLED` geridos pela aplicação, `FINISHED` calculado, sem persistir)
-- [x] ~~Rodar migration (se ainda não aplicada) e escrever seed de `Room`/`Seat` (sala única, 40 assentos)~~ — feito, ver seção 4.31
-- [x] ~~Implementar módulo de Salas/Assentos/Sessões no backend~~ — feito, ver seções 4.34 a 4.37
-- [x] ~~Implementar módulo de Reserva/Ingresso no backend~~ — feito, ver seção 4.38
-- [x] ~~Criar base de componentes reutilizáveis no frontend~~ — feito, ver seção 4.39
-- [x] ~~Iniciar frontend de Salas/Sessões~~ — feito, ver seção 4.40
-- [ ] Limpeza opcional: remover boilerplate morto do `globals.css` (`:root`, `@theme inline`, `@media prefers-color-scheme`, sobras do `create-next-app` não usadas pelo tema Cinema Arcano)
-- [x] ~~Frontend de Salas/Sessões: gerenciamento/cancelamento de sessões pelo organizador~~ — feito, ver seção 4.45
-- [x] ~~Frontend de Reserva/Ingresso: mapa de assentos, pagamento simulado e tela pública do ticket~~ — feito, ver seção 4.42
-- [x] ~~Documentar contas de teste para o recrutador~~ — feito, ver seção 4.43
-- [x] ~~Módulo de Portaria: validação do QR, bloqueio de reuso e registro em `ValidationLog`~~ — feito, ver seção 4.44
-- [x] ~~Meus ingressos / minhas reservas para cliente~~ — feito, ver seção 4.45
-- [x] ~~Recusa no pagamento simulado~~ — feito, ver seção 4.46
-- [x] ~~Página 404 personalizada e estados globais de loading/erro~~ — feito, ver seção 4.46
-- [x] ~~Fallback manual para validação de QR e proteção visual de rotas privadas~~ — feito, ver seção 4.47
-- [x] ~~Deploy (Vercel + Render) e variáveis de ambiente de produção~~ — feito, ver seção 4.48
-- [x] ~~Revisão final do README com links públicos~~ — feito, ver seção 4.48
-- [x] ~~Primeira revisão de responsividade/acessibilidade e estados visuais por tela~~ — feito, ver seção 4.49
-- [x] ~~Polimento visual premium final~~ — feito, ver seção 4.50
-- [x] ~~Revisão final de build/lint/test antes da entrega~~ — feito, ver seção 4.50
+- **README**: detalhado, com passo a passo de setup, incluindo configuração do banco escolhido; qualquer coisa que não funcione como esperado é mencionada
+- **Dados semeados (seed)**: 1 organizador, 2 clientes, 1 usuário de portaria, ao menos 1 evento publicado com ingressos disponíveis
+- **Deploy**: publicado (Vercel + Render)
+- **Repositório GitHub público**, com commits descritivos ao longo da semana
+- **Documentação do uso de IA**: seção explicando quais ferramentas foram usadas, em que partes, e o que foi feito sem IA. Artefatos de processo (este arquivo, entre outros) versionados no repositório.
 
 ---
 
-## 7. Changelog
+## 6. 🛤️ Trilha de execução
+
+O projeto foi conduzido em blocos fechados por módulo — cada decisão de arquitetura, escopo ou ajuste de rota veio antes da implementação correspondente, não depois. A ordem foi: fundação (identidade visual, monorepo, schema do banco, estratégia de QR e concorrência) → Auth → Catálogo → Salas/Sessões → Reserva/Ingresso → Portaria → áreas logadas (gerenciamento do organizador e Meus ingressos) → checkout completo e estados de erro → deploy → responsividade/acessibilidade → polimento visual final.
+
+O histórico completo de cada etapa, com data e link para a decisão correspondente na seção 4, está no changelog (seção 7).
+
+---
+
+## 7. 🗓️ Changelog
 
 | Data | Mudança |
 |---|---|
@@ -653,3 +644,4 @@ Estilo visual: **neo-brutalismo** — sem `border-radius`, bordas sólidas de 2p
 | 21/08/2026 | Deploy realizado: backend/PostgreSQL no Render, frontend na Vercel, seed de produção confirmado via login, CORS de produção configurado com `FRONTEND_URL`, e README atualizado com links públicos e roteiro de teste em produção (4.48). |
 | 21/08/2026 | Primeira revisão de responsividade/acessibilidade aplicada no frontend: skip link, foco visível, avisos com roles semânticas, skeletons em telas principais, ajustes mobile no QR/ticket, checkout, portaria, mapa de assentos, reservas e gerenciamento de sessões (4.49). |
 | 22/08/2026 | Polimento visual final concluído: Home premium com sessões em destaque, filtros de catálogo, trailers via TMDb, ticket com visual de canhoto, portaria refinada, páginas institucionais e limpeza de assets/comentários. README e documentação de uso de IA atualizados para entrega (4.50). |
+| 22/08/2026 | Adicionado aviso temático de cold start na Home para orientar o usuário/recrutador quando o backend do Render free tier estiver acordando. |

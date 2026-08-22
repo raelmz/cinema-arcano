@@ -16,6 +16,7 @@ import {
 } from "./components/movies/FiltrosFilmes";
 import { Aviso } from "./components/ui/Aviso";
 import { Cartao } from "./components/ui/Cartao";
+import { AvisoBackendAcordando } from "./components/ui/AvisoBackendAcordando";
 
 const HERO_INTERVALO_MS = 2000;
 const HERO_QTD_DESTAQUES = 5;
@@ -41,12 +42,26 @@ export default function Home() {
   const [filtros, setFiltros] = useState<FiltrosState>(filtrosPadrao);
 
   const [heroIndex, setHeroIndex] = useState(0);
+  const [mostrarAvisoColdStart, setMostrarAvisoColdStart] = useState(false);
   const heroPausado = useRef(false);
 
   useEffect(() => {
     loadSessoes();
     loadPopular();
   }, []);
+
+  useEffect(() => {
+    if (!isLoading && !isLoadingSessoes) {
+      queueMicrotask(() => setMostrarAvisoColdStart(false));
+      return;
+    }
+
+    const timerId = window.setTimeout(() => {
+      setMostrarAvisoColdStart(true);
+    }, 3500);
+
+    return () => window.clearTimeout(timerId);
+  }, [isLoading, isLoadingSessoes]);
 
   async function loadSessoes() {
     setIsLoadingSessoes(true);
@@ -228,6 +243,12 @@ export default function Home() {
       )}
 
       <Container className="pt-12">
+        {mostrarAvisoColdStart && (isLoading || isLoadingSessoes) && (
+          <div className="mb-10">
+            <AvisoBackendAcordando />
+          </div>
+        )}
+
         <section className="mb-14">
           <h2 className="mb-8 text-3xl font-black uppercase text-white drop-shadow-[2px_2px_0_#7b1fa2]">
             Sessões Disponíveis
